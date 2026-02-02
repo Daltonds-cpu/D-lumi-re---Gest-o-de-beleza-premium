@@ -16,6 +16,7 @@ import {
   Check,
   FileText
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../App';
@@ -127,6 +128,7 @@ const SuccessToast = ({ message }: { message: string }) => (
 
 const AppointmentFormModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const { clients, addAppointment } = useApp();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
@@ -232,7 +234,13 @@ const AppointmentFormModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                   <User size={12} className="text-[#C5A059]" /> Cliente Vinculada
                 </label>
-                <button className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest flex items-center gap-1.5 hover:opacity-70 transition-opacity">
+                <button 
+                  onClick={() => {
+                    onClose();
+                    navigate('/clients', { state: { openNewClient: true } });
+                  }}
+                  className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+                >
                   <UserPlus size={10} /> Cadastrar Nova
                 </button>
               </div>

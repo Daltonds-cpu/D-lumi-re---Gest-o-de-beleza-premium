@@ -12,7 +12,8 @@ import {
   Edit2,
   Info,
   Instagram,
-  ExternalLink
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Dashboard from './pages/Dashboard';
@@ -33,6 +34,8 @@ interface AppContextType {
   };
   updateClinicInfo: (info: { name: string; tagline: string; logo: string | null }) => void;
   setShowAbout: (show: boolean) => void;
+  deferredPrompt: any;
+  handleInstallClick: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -108,7 +111,7 @@ const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 };
 
 const Sidebar = () => {
-  const { clinicInfo, setShowAbout } = useApp();
+  const { clinicInfo, setShowAbout, handleInstallClick, deferredPrompt } = useApp();
   
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 black-piano text-white flex-col z-50 border-r border-[#C5A059]/10">
@@ -142,9 +145,12 @@ const Sidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-white/5 space-y-1">
-        <div className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-[#C5A059] cursor-pointer transition-colors group">
-          <Settings size={20} className="group-hover:rotate-45 transition-transform duration-500" />
-          <span className="font-medium text-sm">Configurações</span>
+        <div 
+          onClick={handleInstallClick}
+          className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-[#C5A059] cursor-pointer transition-colors group rounded-xl"
+        >
+          <Download size={20} className="group-hover:translate-y-1 transition-transform duration-500" />
+          <span className="font-medium text-sm">Baixar App</span>
         </div>
         <div 
           onClick={() => setShowAbout(true)}
@@ -159,7 +165,7 @@ const Sidebar = () => {
 };
 
 const BottomNav = () => {
-  const { setShowAbout } = useApp();
+  const { setShowAbout, handleInstallClick, deferredPrompt } = useApp();
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 black-piano border-t border-[#C5A059]/20 h-20 flex items-center justify-around px-4 z-50">
       <NavLink 
@@ -183,6 +189,13 @@ const BottomNav = () => {
         <Users size={22} />
         <span className="text-[9px] font-bold uppercase tracking-widest">Clientes</span>
       </NavLink>
+      <div 
+        onClick={handleInstallClick}
+        className="flex flex-col items-center gap-1 text-gray-600 hover:text-[#C5A059] cursor-pointer"
+      >
+        <Download size={22} />
+        <span className="text-[9px] font-bold uppercase tracking-widest">Baixar</span>
+      </div>
       <div 
         onClick={() => setShowAbout(true)}
         className="flex flex-col items-center gap-1 text-gray-600 cursor-pointer"
@@ -252,6 +265,7 @@ const App: React.FC = () => {
   });
 
   const [showAbout, setShowAbout] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const clients = [
     { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11' },
@@ -270,6 +284,25 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('lumiere_clinic_info', JSON.stringify(clinicInfo));
   }, [clinicInfo]);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert("Para instalar D'Lumière:\n\nNo iPhone (iOS): Toque em 'Compartilhar' e selecione 'Adicionar à Tela de Início'.\n\nNo Android ou Desktop: Procure a opção 'Instalar Aplicativo' no menu do navegador.");
+    }
+  };
 
   const addAppointment = (appointment: Appointment) => {
     setAppointments(prev => [...prev, appointment]);
@@ -291,7 +324,9 @@ const App: React.FC = () => {
       clients, 
       clinicInfo, 
       updateClinicInfo, 
-      setShowAbout 
+      setShowAbout,
+      deferredPrompt,
+      handleInstallClick
     }}>
       <HashRouter>
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col lg:flex-row">

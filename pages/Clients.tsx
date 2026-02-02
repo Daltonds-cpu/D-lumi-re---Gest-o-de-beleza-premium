@@ -28,6 +28,7 @@ import {
   Image as ImageIcon,
   MessageCircle
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client, Appointment } from '../types';
@@ -652,6 +653,7 @@ const ClientFormModal: React.FC<{ isOpen: boolean; onClose: () => void; initialD
 
 const Clients: React.FC = () => {
   const { clients: appClients } = useApp();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -659,6 +661,15 @@ const Clients: React.FC = () => {
   const [isDossieModalOpen, setIsDossieModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [filters, setFilters] = useState({ status: 'all', tags: [] as string[] });
+
+  // Abre automaticamente o modal se vier do redirecionamento
+  useEffect(() => {
+    if (location.state?.openNewClient) {
+      setIsModalOpen(true);
+      // Limpa o estado para evitar reabertura indesejada
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Filter local clients based on search and filters
   const filteredClients = useMemo(() => {
