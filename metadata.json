@@ -1,0 +1,7 @@
+{
+  "name": "D'Lumière - Premium Beauty Management",
+  "description": "A sophisticated and luxurious management system for high-end beauty professionals, featuring client tracking, scheduling, and an elegant feminine interface.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
