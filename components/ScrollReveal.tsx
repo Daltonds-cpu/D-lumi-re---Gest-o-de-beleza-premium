@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -15,7 +15,8 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
   direction = 'up',
   className = "" 
 }) => {
-  const variants = {
+  // Use explicit Variants type to resolve type inference issues with transition properties
+  const variants: Variants = {
     hidden: { 
       opacity: 0, 
       y: direction === 'up' ? 30 : direction === 'down' ? -30 : 0,
@@ -27,7 +28,8 @@ const ScrollReveal: React.FC<ScrollRevealProps> = ({
       x: 0,
       transition: { 
         duration: 0.8, 
-        ease: [0.21, 0.47, 0.32, 0.98],
+        // Explicitly cast the easing array to the expected tuple format [number, number, number, number]
+        ease: [0.21, 0.47, 0.32, 0.98] as [number, number, number, number],
         delay 
       }
     }

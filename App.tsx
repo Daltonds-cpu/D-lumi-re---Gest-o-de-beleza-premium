@@ -24,6 +24,7 @@ import { Appointment } from './types';
 interface AppContextType {
   appointments: Appointment[];
   addAppointment: (appointment: Appointment) => void;
+  updateAppointment: (appointment: Appointment) => void;
   clients: any[];
   clinicInfo: {
     name: string;
@@ -200,7 +201,7 @@ const Header = () => {
     switch(location.pathname) {
       case '/': return 'Painel Executivo';
       case '/clients': return 'Gestão de Clientes';
-      case '/agenda': return 'Agenda Lumière';
+      case '/agenda': return 'Agenda D.Lumière';
       default: return clinicInfo.name;
     }
   };
@@ -244,7 +245,7 @@ const App: React.FC = () => {
   const [clinicInfo, setClinicInfo] = useState(() => {
     const saved = localStorage.getItem('lumiere_clinic_info');
     return saved ? JSON.parse(saved) : {
-      name: 'LUMIÈRE',
+      name: 'D.LUMIÈRE',
       tagline: 'Esthétique de Luxe',
       logo: null
     };
@@ -253,13 +254,13 @@ const App: React.FC = () => {
   const [showAbout, setShowAbout] = useState(false);
 
   const clients = [
-    { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11' },
-    { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12' },
-    { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13' },
-    { id: '4', name: 'Bruna Marquezine', phone: '(21) 97766-5544', instagram: '@brunamarquezine', email: 'bruna@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=14' },
-    { id: '5', name: 'Helena Roitman', phone: '(11) 92222-3333', instagram: '@helena', email: 'helena@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=1' },
-    { id: '6', name: 'Beatriz Segall', phone: '(11) 94444-5555', instagram: '@beatriz', email: 'beatriz@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=2' },
-    { id: '7', name: 'Clara Nunes', phone: '(11) 96666-7777', instagram: '@clara', email: 'clara@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=3' },
+    { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11' },
+    { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', whatsapp: '11912345678', facebook: '', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12' },
+    { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', whatsapp: '', facebook: 'anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13' },
+    { id: '4', name: 'Bruna Marquezine', phone: '(21) 97766-5544', instagram: '@brunamarquezine', whatsapp: '21977665544', facebook: 'bruna', email: 'bruna@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=14' },
+    { id: '5', name: 'Helena Roitman', phone: '(11) 92222-3333', instagram: '@helena', whatsapp: '11922223333', facebook: '', email: 'helena@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=1' },
+    { id: '6', name: 'Beatriz Segall', phone: '(11) 94444-5555', instagram: '@beatriz', whatsapp: '', facebook: '', email: 'beatriz@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=2' },
+    { id: '7', name: 'Clara Nunes', phone: '(11) 96666-7777', instagram: '@clara', whatsapp: '11966667777', facebook: 'claranunes', email: 'clara@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=3' },
   ];
 
   useEffect(() => {
@@ -274,6 +275,10 @@ const App: React.FC = () => {
     setAppointments(prev => [...prev, appointment]);
   };
 
+  const updateAppointment = (appointment: Appointment) => {
+    setAppointments(prev => prev.map(a => a.id === appointment.id ? appointment : a));
+  };
+
   const updateClinicInfo = (info: any) => {
     setClinicInfo(info);
   };
@@ -282,6 +287,7 @@ const App: React.FC = () => {
     <AppContext.Provider value={{ 
       appointments, 
       addAppointment, 
+      updateAppointment,
       clients, 
       clinicInfo, 
       updateClinicInfo, 

@@ -24,6 +24,8 @@ export interface Appointment {
   service: string;
   status: 'scheduled' | 'completed' | 'canceled';
   notes?: string;
+  servicePhotos?: string[]; // Array of base64 strings
+  serviceNotes?: string;   // Professional observations
 }
 
 export type ViewType = 'daily' | 'weekly' | 'monthly';

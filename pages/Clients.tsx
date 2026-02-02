@@ -21,12 +21,248 @@ import {
   Edit2,
   Trash2,
   Clock,
-  UserPlus
+  UserPlus,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  Image as ImageIcon,
+  MessageCircle
 } from 'lucide-react';
 import ScrollReveal from '../components/ScrollReveal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client, Appointment } from '../types';
 import { useApp } from '../App';
+
+/**
+ * Modal for client dossier (History and Service Records)
+ */
+const DossieModal: React.FC<{ isOpen: boolean; onClose: () => void; client: Client | null }> = ({ isOpen, onClose, client }) => {
+  const { appointments, updateAppointment } = useApp();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [serviceNotes, setServiceNotes] = useState('');
+  const [servicePhotos, setServicePhotos] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const history = useMemo(() => {
+    if (!client) return [];
+    return appointments
+      .filter(a => a.clientId === client.id)
+      .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+  }, [client, appointments]);
+
+  useEffect(() => {
+    if (selectedAppointment) {
+      setServiceNotes(selectedAppointment.serviceNotes || '');
+      setServicePhotos(selectedAppointment.servicePhotos || []);
+    } else {
+      setServiceNotes('');
+      setServicePhotos([]);
+    }
+  }, [selectedAppointment]);
+
+  const handleSaveRecord = () => {
+    if (!selectedAppointment) return;
+    setIsSaving(true);
+    const updated = {
+      ...selectedAppointment,
+      serviceNotes,
+      servicePhotos
+    };
+    updateAppointment(updated);
+    setTimeout(() => {
+      setIsSaving(false);
+      setSelectedAppointment(null);
+    }, 800);
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setServicePhotos(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setServicePhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  if (!isOpen || !client) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-[#0A0A0B]/80 backdrop-blur-md" />
+        <motion.div 
+          initial={{ opacity: 0, y: 100 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          exit={{ opacity: 0, y: 100 }} 
+          className="relative w-full max-w-4xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden h-full sm:h-[85vh] flex flex-col"
+        >
+          {/* Header */}
+          <div className="black-piano p-6 lg:p-8 text-white flex-shrink-0 flex justify-between items-center relative overflow-hidden">
+            <div className="absolute inset-0 iridescent-bg opacity-10"></div>
+            <div className="relative z-10 flex items-center gap-6">
+              <img src={client.photoUrl} className="w-16 h-16 rounded-full border-2 border-[#C5A059]/40 object-cover shadow-xl" alt={client.name} />
+              <div>
+                <h2 className="text-xl lg:text-2xl font-playfair font-bold text-[#C5A059] tracking-tight">{client.name}</h2>
+                <p className="text-[10px] text-gray-500 uppercase tracking-[0.3em] font-black">Dossiê de Atendimento</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="relative z-10 p-2.5 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-all">
+              <X size={24} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            {/* History List */}
+            <div className={`flex-1 flex flex-col overflow-hidden border-r border-gray-100 ${selectedAppointment ? 'hidden lg:flex' : 'flex'}`}>
+              <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Histórico de Agendamentos</h3>
+                <span className="px-2.5 py-1 rounded-full bg-[#C5A059]/10 text-[#C5A059] text-[9px] font-black uppercase tracking-widest">{history.length} sessões</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {history.map((app) => (
+                  <button 
+                    key={app.id} 
+                    onClick={() => setSelectedAppointment(app)}
+                    className={`w-full text-left p-5 rounded-[24px] border transition-all duration-300 group
+                      ${selectedAppointment?.id === app.id 
+                        ? 'black-piano border-[#0A0A0B] shadow-xl translate-x-1' 
+                        : 'bg-white border-gray-100 hover:border-[#C5A059]/30 hover:bg-gray-50/50 shadow-sm'}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon size={12} className={selectedAppointment?.id === app.id ? 'text-[#C5A059]' : 'text-gray-300'} />
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${selectedAppointment?.id === app.id ? 'text-[#C5A059]' : 'text-gray-400'}`}>
+                          {new Date(app.date + "T12:00:00").toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${app.status === 'completed' ? 'bg-green-50 text-green-500' : 'bg-blue-50 text-blue-400'}`}>
+                        {app.status === 'scheduled' ? 'Agendado' : 'Finalizado'}
+                      </span>
+                    </div>
+                    <h4 className={`text-sm font-bold tracking-tight mb-1 truncate ${selectedAppointment?.id === app.id ? 'text-white' : 'text-[#0A0A0B]'}`}>
+                      {app.service}
+                    </h4>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-[10px] tabular-nums ${selectedAppointment?.id === app.id ? 'text-gray-500' : 'text-gray-400'}`}>{app.time}</span>
+                      {(app.servicePhotos?.length || 0) > 0 && (
+                        <span className="flex items-center gap-1 text-[9px] text-[#C5A059] font-black uppercase tracking-widest">
+                          <ImageIcon size={10} /> {app.servicePhotos?.length} fotos
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+                {history.length === 0 && (
+                  <div className="text-center py-20 bg-gray-50/50 rounded-[32px] border border-dashed border-gray-200 m-2">
+                    <p className="text-[10px] text-gray-300 font-black uppercase tracking-widest">Nenhum registro</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Details & Record Editor */}
+            <div className={`flex-[1.5] flex flex-col overflow-hidden bg-white ${!selectedAppointment ? 'hidden lg:flex' : 'flex'}`}>
+              {selectedAppointment ? (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="p-6 border-b border-gray-50 flex items-center gap-4 bg-gray-50/30">
+                    <button onClick={() => setSelectedAppointment(null)} className="lg:hidden p-2 text-gray-400"><ChevronLeft size={20} /></button>
+                    <div>
+                      <h3 className="text-sm font-black text-[#0A0A0B] uppercase tracking-widest">Registro de Atendimento</h3>
+                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">{selectedAppointment.service}</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-8 lg:p-10 space-y-10">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                        <FileText size={12} className="text-[#C5A059]" /> Observações Profissionais
+                      </label>
+                      <textarea 
+                        rows={6} 
+                        value={serviceNotes}
+                        onChange={e => setServiceNotes(e.target.value)}
+                        placeholder="Registre detalhes técnicos, produtos utilizados, reações da cliente ou observações para o próximo atendimento..."
+                        className="w-full px-6 py-5 rounded-[24px] bg-gray-50 border-gray-100 border text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none resize-none transition-all shadow-inner"
+                      />
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center px-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                          <Camera size={12} className="text-[#C5A059]" /> Galeria do Atendimento
+                        </label>
+                        <button 
+                          onClick={() => photoInputRef.current?.click()}
+                          className="flex items-center gap-2 text-[10px] font-black text-[#C5A059] uppercase tracking-widest hover:opacity-70 transition-opacity"
+                        >
+                          <Upload size={12} /> Adicionar Fotos
+                        </button>
+                      </div>
+                      <input ref={photoInputRef} type="file" multiple className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+                      
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {servicePhotos.map((photo, idx) => (
+                          <div key={idx} className="relative aspect-square rounded-[20px] overflow-hidden group shadow-md">
+                            <img src={photo} className="w-full h-full object-cover" alt="Service photo" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button onClick={() => removePhoto(idx)} className="p-2 bg-red-500 text-white rounded-full hover:scale-110 transition-transform"><Trash2 size={16}/></button>
+                            </div>
+                          </div>
+                        ))}
+                        <button 
+                          onClick={() => photoInputRef.current?.click()}
+                          className="aspect-square rounded-[20px] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-gray-300 hover:text-[#C5A059] hover:border-[#C5A059]/30 transition-all bg-gray-50/50"
+                        >
+                          <Plus size={24} strokeWidth={1} />
+                          <span className="text-[8px] font-black uppercase tracking-widest mt-2">Nova Foto</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-8 border-t border-gray-100 flex gap-4 bg-gray-50/50">
+                    <button onClick={() => setSelectedAppointment(null)} className="flex-1 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Voltar</button>
+                    <button 
+                      onClick={handleSaveRecord}
+                      disabled={isSaving}
+                      className="flex-[2] py-4 rounded-[18px] black-piano text-[#C5A059] text-[10px] font-black shadow-xl uppercase tracking-widest btn-3d border border-[#C5A059]/20 flex items-center justify-center gap-3"
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          Sincronizando...
+                        </>
+                      ) : (
+                        <>
+                          <Check size={16} /> Salvar no Dossiê
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-gray-50/30">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-gray-100 shadow-sm border border-gray-100 mb-6">
+                    <FileText size={32} />
+                  </div>
+                  <h4 className="text-sm font-playfair font-black text-gray-400 uppercase tracking-[0.4em]">Selecione uma Sessão</h4>
+                  <p className="text-[10px] text-gray-300 mt-4 font-bold uppercase tracking-widest max-w-xs leading-relaxed">Clique em um agendamento ao lado para visualizar e registrar os detalhes técnicos do atendimento.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
 
 /**
  * Modal for scheduling appointments directly from the clients page.
@@ -145,11 +381,31 @@ const ClientCard: React.FC<{
   onSchedule: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
-}> = ({ client, delay, onSchedule, onEdit, onDelete }) => {
+  onDossie: (client: Client) => void;
+}> = ({ client, delay, onSchedule, onEdit, onDelete, onDossie }) => {
   const [showMenu, setShowMenu] = useState(false);
-  const hasInsta = !!client.instagram && client.instagram.length > 0;
-  const hasFb = !!client.facebook && client.facebook.length > 0;
-  const hasWa = !!client.whatsapp && client.whatsapp.length > 0;
+  const hasInsta = !!client.instagram && String(client.instagram).trim().length > 0;
+  const hasFb = !!client.facebook && String(client.facebook).trim().length > 0;
+  const hasWa = !!client.whatsapp && String(client.whatsapp).trim().length > 0;
+
+  const handleInstagram = () => {
+    if (!hasInsta) return;
+    const handle = client.instagram!.replace('@', '').trim();
+    window.open(`https://instagram.com/${handle}`, '_blank');
+  };
+
+  const handleFacebook = () => {
+    if (!hasFb) return;
+    const val = client.facebook!.trim();
+    const url = val.startsWith('http') ? val : `https://facebook.com/${val}`;
+    window.open(url, '_blank');
+  };
+
+  const handleWhatsApp = () => {
+    if (!hasWa) return;
+    const cleanNumber = client.whatsapp!.replace(/\D/g, '');
+    window.open(`https://wa.me/${cleanNumber}`, '_blank');
+  };
 
   return (
     <ScrollReveal delay={delay} direction="up" className="w-full relative">
@@ -215,19 +471,34 @@ const ClientCard: React.FC<{
           <p className="text-[10px] lg:text-xs text-gray-400 font-medium tracking-widest uppercase mb-8">{client.phone}</p>
           
           <div className="flex justify-center gap-4 mb-8">
-            <button className={`w-10 h-10 lg:w-11 lg:h-11 rounded-[16px] bg-white border flex items-center justify-center transition-all shadow-sm ${hasInsta ? 'text-[#C5A059] border-[#C5A059]/30' : 'text-gray-300 border-gray-100'}`}>
+            <button 
+              onClick={handleInstagram}
+              disabled={!hasInsta}
+              className={`w-10 h-10 lg:w-11 lg:h-11 rounded-[16px] bg-white border flex items-center justify-center transition-all shadow-sm ${hasInsta ? 'text-[#E1306C] border-[#E1306C]/30 hover:shadow-md hover:scale-110' : 'text-gray-300 border-gray-100 cursor-not-allowed'}`}
+            >
               <Instagram size={18} />
             </button>
-            <button className={`w-10 h-10 lg:w-11 lg:h-11 rounded-[16px] bg-white border flex items-center justify-center transition-all shadow-sm ${hasFb ? 'text-[#C5A059] border-[#C5A059]/30' : 'text-gray-300 border-gray-100'}`}>
+            <button 
+              onClick={handleFacebook}
+              disabled={!hasFb}
+              className={`w-10 h-10 lg:w-11 lg:h-11 rounded-[16px] bg-white border flex items-center justify-center transition-all shadow-sm ${hasFb ? 'text-[#1877F2] border-[#1877F2]/30 hover:shadow-md hover:scale-110' : 'text-gray-300 border-gray-100 cursor-not-allowed'}`}
+            >
               <Facebook size={18} />
             </button>
-            <button className={`w-10 h-10 lg:w-11 lg:h-11 rounded-[16px] bg-white border flex items-center justify-center transition-all shadow-sm ${hasWa ? 'text-[#C5A059] border-[#C5A059]/30' : 'text-gray-300 border-gray-100'}`}>
-              <Send size={18} className="rotate-[-45deg] translate-x-0.5" />
+            <button 
+              onClick={handleWhatsApp}
+              disabled={!hasWa}
+              className={`w-10 h-10 lg:w-11 lg:h-11 rounded-[16px] bg-white border flex items-center justify-center transition-all shadow-sm ${hasWa ? 'text-[#25D366] border-[#25D366]/30 hover:shadow-md hover:scale-110' : 'text-gray-300 border-gray-100 cursor-not-allowed'}`}
+            >
+              <MessageCircle size={18} />
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="py-3.5 rounded-[18px] border border-gray-200 text-[10px] font-black text-gray-500 hover:bg-white hover:text-[#0A0A0B] transition-all uppercase tracking-[0.2em] shadow-sm">
+            <button 
+              onClick={() => onDossie(client)}
+              className="py-3.5 rounded-[18px] border border-gray-200 text-[10px] font-black text-gray-500 hover:bg-white hover:text-[#0A0A0B] transition-all uppercase tracking-[0.2em] shadow-sm"
+            >
               Dossiê
             </button>
             <button 
@@ -385,6 +656,7 @@ const Clients: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isDossieModalOpen, setIsDossieModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [filters, setFilters] = useState({ status: 'all', tags: [] as string[] });
 
@@ -407,6 +679,11 @@ const Clients: React.FC = () => {
   const handleEdit = (client: Client) => {
     setSelectedClient(client);
     setIsModalOpen(true);
+  };
+
+  const handleDossie = (client: Client) => {
+    setSelectedClient(client);
+    setIsDossieModalOpen(true);
   };
 
   const handleDelete = (clientId: string) => {
@@ -454,6 +731,7 @@ const Clients: React.FC = () => {
             onSchedule={handleSchedule}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onDossie={handleDossie}
           />
         ))}
       </div>
@@ -473,6 +751,7 @@ const Clients: React.FC = () => {
 
       <ClientFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialData={selectedClient} />
       <AppointmentFormModal isOpen={isScheduleModalOpen} onClose={() => setIsScheduleModalOpen(false)} initialClient={selectedClient} />
+      <DossieModal isOpen={isDossieModalOpen} onClose={() => setIsDossieModalOpen(false)} client={selectedClient} />
       
       <AnimatePresence>
         {isFilterModalOpen && (
