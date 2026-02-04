@@ -13,6 +13,7 @@ export interface Client {
   createdAt: string;
   status?: 'active' | 'vip' | 'inactive';
   tags?: string[];
+  birthday?: string; // Format YYYY-MM-DD
 }
 
 export interface Appointment {
@@ -26,6 +27,12 @@ export interface Appointment {
   notes?: string;
   servicePhotos?: string[]; // Array of base64 strings
   serviceNotes?: string;   // Professional observations
+}
+
+export interface Reminder {
+  id: string;
+  category: string;
+  text: string;
 }
 
 export type ViewType = 'daily' | 'weekly' | 'monthly';

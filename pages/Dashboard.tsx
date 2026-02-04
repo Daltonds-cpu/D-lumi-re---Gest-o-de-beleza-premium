@@ -17,7 +17,10 @@ import {
   FileText,
   Edit3,
   Camera,
-  Upload
+  Upload,
+  Gift,
+  Cake,
+  Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
@@ -266,6 +269,50 @@ const ClinicInfoModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
           <div className="p-6 bg-gray-50/50 flex gap-4">
              <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cancelar</button>
              <button onClick={handleSave} className="flex-[2] py-4 black-piano text-[#C5A059] rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl btn-3d border border-[#C5A059]/20">Salvar Identidade</button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
+
+const ReminderModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { addReminder } = useApp();
+  const [category, setCategory] = useState('');
+  const [text, setText] = useState('');
+
+  const handleSave = () => {
+    if (!text) return;
+    addReminder({
+      id: Date.now().toString(),
+      category: category || 'Geral',
+      text
+    });
+    setCategory('');
+    setText('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-[#0A0A0B]/80 backdrop-blur-md" />
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl">
+          <div className="black-piano p-6 text-white">
+            <h2 className="text-xl font-playfair font-bold text-[#C5A059]">Novo Lembrete</h2>
+          </div>
+          <div className="p-8 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Categoria</label>
+              <input type="text" value={category} onChange={e => setCategory(e.target.value)} placeholder="Ex: WhatsApp, Clínica, Estoque" className="w-full px-5 py-4 rounded-[18px] bg-gray-50 border-gray-100 border focus:bg-white focus:border-[#C5A059]/40 outline-none text-sm font-medium" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Lembrete</label>
+              <textarea rows={3} value={text} onChange={e => setText(e.target.value)} placeholder="O que você não pode esquecer?" className="w-full px-5 py-4 rounded-[18px] bg-gray-50 border-gray-100 border focus:bg-white focus:border-[#C5A059]/40 outline-none text-sm font-medium resize-none" />
+            </div>
+            <button onClick={handleSave} className="w-full py-4.5 rounded-[18px] black-piano text-[#C5A059] text-[10px] font-black shadow-xl uppercase tracking-widest btn-3d">Adicionar Lembrete</button>
           </div>
         </motion.div>
       </div>
@@ -568,9 +615,10 @@ const AppointmentFormModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 };
 
 const Dashboard: React.FC = () => {
-  const { appointments, clients, clinicInfo } = useApp();
+  const { appointments, clients, clinicInfo, reminders, deleteReminder } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditClinicOpen, setIsEditClinicOpen] = useState(false);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -586,6 +634,18 @@ const Dashboard: React.FC = () => {
   const upcomingCount = useMemo(() => {
     return appointments.filter(app => app.date >= todayStr && app.status !== 'canceled').length;
   }, [appointments, todayStr]);
+
+  // Lógica funcional para aniversariantes do dia
+  const birthdaysToday = useMemo(() => {
+    const today = new Date();
+    const m = today.getMonth() + 1;
+    const d = today.getDate();
+    return clients.filter(client => {
+      if (!client.birthday) return false;
+      const [year, month, day] = client.birthday.split('-').map(Number);
+      return month === m && day === d;
+    });
+  }, [clients]);
 
   return (
     <div className="space-y-8 lg:space-y-12">
@@ -647,34 +707,70 @@ const Dashboard: React.FC = () => {
             <ScrollReveal delay={0.4}>
               <div className="glass-card p-6 lg:p-8 rounded-[28px] h-full premium-shadow">
                 <div className="flex justify-between items-center mb-6 lg:mb-8">
-                  <h3 className="font-playfair font-bold text-lg text-[#0A0A0B]">Atividades</h3>
-                  <button className="text-[10px] text-[#C5A059] font-black uppercase tracking-[0.2em] hover:opacity-70 transition-opacity">Ver Mais</button>
+                  <h3 className="font-playfair font-bold text-lg text-[#0A0A0B]">Aniversários</h3>
+                  <div className="p-2 rounded-lg bg-[#C5A059]/10 text-[#C5A059]">
+                    <Gift size={18} />
+                  </div>
                 </div>
                 <div className="space-y-4 lg:space-y-6">
-                  {[1,2].map((i) => (
-                    <div key={i} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
-                      <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-[#C5A059] shadow-sm border border-gray-100">
-                        <Check size={14} strokeWidth={3} />
+                  {birthdaysToday.length > 0 ? (
+                    birthdaysToday.map((client) => (
+                      <div key={client.id} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0 group cursor-pointer" onClick={() => navigate('/clients')}>
+                        <div className="relative">
+                          <img src={client.photoUrl} className="w-10 h-10 rounded-full object-cover border-2 border-[#C5A059]/20" alt={client.name} />
+                          <div className="absolute -top-1 -right-1">
+                            <Cake size={12} className="text-[#C5A059] drop-shadow-sm" />
+                          </div>
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-xs lg:text-sm font-bold text-[#0A0A0B] truncate">{client.name}</p>
+                          <p className="text-[10px] text-[#C5A059] font-black uppercase tracking-widest mt-0.5">Parabéns pelo seu dia! ✨</p>
+                        </div>
                       </div>
-                      <div className="overflow-hidden">
-                        <p className="text-xs lg:text-sm font-bold text-[#0A0A0B] truncate">Procedimento Finalizado</p>
-                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">Marina Silva</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="py-10 text-center opacity-40">
+                      <Gift size={24} className="mx-auto mb-3 text-gray-300" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nenhum aniversário hoje</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={0.5}>
               <div className="glass-card p-6 lg:p-8 rounded-[28px] h-full premium-shadow border-l-4 border-[#C5A059]/30">
-                <h3 className="font-playfair font-bold text-lg text-[#0A0A0B] mb-6 lg:mb-8">Lembretes</h3>
-                <div className="space-y-4">
-                  <div className="p-4 bg-white/40 border border-gray-100 rounded-2xl relative overflow-hidden group">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 gold-gradient"></div>
-                    <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest mb-1.5">WhatsApp</p>
-                    <p className="text-xs lg:text-sm font-bold text-gray-700 leading-snug">Confirmar agendas de amanhã com clientes pendentes.</p>
-                  </div>
+                <div className="flex justify-between items-center mb-6 lg:mb-8">
+                  <h3 className="font-playfair font-bold text-lg text-[#0A0A0B]">Lembretes</h3>
+                  <button 
+                    onClick={() => setIsReminderModalOpen(true)}
+                    className="p-2 rounded-lg bg-[#C5A059]/10 text-[#C5A059] hover:bg-[#C5A059]/20 transition-all active:scale-90"
+                  >
+                    <Plus size={18} strokeWidth={3} />
+                  </button>
+                </div>
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                  {reminders.length > 0 ? (
+                    reminders.map((reminder) => (
+                      <div key={reminder.id} className="p-4 bg-white/40 border border-gray-100 rounded-2xl relative overflow-hidden group">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 gold-gradient"></div>
+                        <div className="flex justify-between items-start">
+                          <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest mb-1.5">{reminder.category}</p>
+                          <button 
+                            onClick={() => deleteReminder(reminder.id)}
+                            className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all p-1"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        <p className="text-xs lg:text-sm font-bold text-gray-700 leading-snug">{reminder.text}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-10 text-center opacity-40">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sem lembretes ativos</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </ScrollReveal>
@@ -728,6 +824,7 @@ const Dashboard: React.FC = () => {
 
       <AppointmentFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <ClinicInfoModal isOpen={isEditClinicOpen} onClose={() => setIsEditClinicOpen(false)} />
+      <ReminderModal isOpen={isReminderModalOpen} onClose={() => setIsReminderModalOpen(false)} />
     </div>
   );
 };

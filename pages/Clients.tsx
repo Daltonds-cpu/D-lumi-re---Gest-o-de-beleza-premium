@@ -80,7 +80,8 @@ const DossieModal: React.FC<{ isOpen: boolean; onClose: () => void; client: Clie
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      Array.from(files).forEach(file => {
+      // Explicitly type 'file' as 'File' to ensure compatibility with 'readAsDataURL' and avoid 'unknown' type errors.
+      Array.from(files).forEach((file: File) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           setServicePhotos(prev => [...prev, reader.result as string]);

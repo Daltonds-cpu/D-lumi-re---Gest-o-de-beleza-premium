@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
 import Agenda from './pages/Agenda';
-import { Appointment } from './types';
+import { Appointment, Reminder } from './types';
 
 // Shared Context for global state persistence
 interface AppContextType {
@@ -36,6 +36,9 @@ interface AppContextType {
   setShowAbout: (show: boolean) => void;
   deferredPrompt: any;
   handleInstallClick: () => void;
+  reminders: Reminder[];
+  addReminder: (reminder: Reminder) => void;
+  deleteReminder: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -264,17 +267,24 @@ const App: React.FC = () => {
     };
   });
 
+  const [reminders, setReminders] = useState<Reminder[]>(() => {
+    const saved = localStorage.getItem('lumiere_reminders');
+    return saved ? JSON.parse(saved) : [
+      { id: '1', category: 'WhatsApp', text: 'Confirmar agendas de amanhã com clientes pendentes.' }
+    ];
+  });
+
   const [showAbout, setShowAbout] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const clients = [
-    { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11' },
-    { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', whatsapp: '11912345678', facebook: '', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12' },
-    { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', whatsapp: '', facebook: 'anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13' },
-    { id: '4', name: 'Bruna Marquezine', phone: '(21) 97766-5544', instagram: '@brunamarquezine', whatsapp: '21977665544', facebook: 'bruna', email: 'bruna@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=14' },
-    { id: '5', name: 'Helena Roitman', phone: '(11) 92222-3333', instagram: '@helena', whatsapp: '11922223333', facebook: '', email: 'helena@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=1' },
-    { id: '6', name: 'Beatriz Segall', phone: '(11) 94444-5555', instagram: '@beatriz', whatsapp: '', facebook: '', email: 'beatriz@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=2' },
-    { id: '7', name: 'Clara Nunes', phone: '(11) 96666-7777', instagram: '@clara', whatsapp: '11966667777', facebook: 'claranunes', email: 'clara@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=3' },
+    { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11', birthday: '1995-10-24' },
+    { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', whatsapp: '11912345678', facebook: '', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12', birthday: '1980-07-20' },
+    { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', whatsapp: '', facebook: 'anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13', birthday: '1993-03-30' },
+    { id: '4', name: 'Bruna Marquezine', phone: '(21) 97766-5544', instagram: '@brunamarquezine', whatsapp: '21977665544', facebook: 'bruna', email: 'bruna@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=14', birthday: '1995-08-04' },
+    { id: '5', name: 'Helena Roitman', phone: '(11) 92222-3333', instagram: '@helena', whatsapp: '11922223333', facebook: '', email: 'helena@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=1', birthday: '1982-10-24' },
+    { id: '6', name: 'Beatriz Segall', phone: '(11) 94444-5555', instagram: '@beatriz', whatsapp: '', facebook: '', email: 'beatriz@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=2', birthday: '1926-10-09' },
+    { id: '7', name: 'Clara Nunes', phone: '(11) 96666-7777', instagram: '@clara', whatsapp: '11966667777', facebook: 'claranunes', email: 'clara@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=3', birthday: '1942-08-12' },
   ];
 
   useEffect(() => {
@@ -284,6 +294,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('lumiere_clinic_info', JSON.stringify(clinicInfo));
   }, [clinicInfo]);
+
+  useEffect(() => {
+    localStorage.setItem('lumiere_reminders', JSON.stringify(reminders));
+  }, [reminders]);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -316,6 +330,14 @@ const App: React.FC = () => {
     setClinicInfo(info);
   };
 
+  const addReminder = (reminder: Reminder) => {
+    setReminders(prev => [reminder, ...prev]);
+  };
+
+  const deleteReminder = (id: string) => {
+    setReminders(prev => prev.filter(r => r.id !== id));
+  };
+
   return (
     <AppContext.Provider value={{ 
       appointments, 
@@ -326,7 +348,10 @@ const App: React.FC = () => {
       updateClinicInfo, 
       setShowAbout,
       deferredPrompt,
-      handleInstallClick
+      handleInstallClick,
+      reminders,
+      addReminder,
+      deleteReminder
     }}>
       <HashRouter>
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col lg:flex-row">
