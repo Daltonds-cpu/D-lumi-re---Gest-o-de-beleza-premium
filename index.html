@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lumière | Premium Management</title>
     <meta name="theme-color" content="#0A0A0B" />
+    <!-- Favicon embutido para evitar 404 favicon.ico -->
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSIjMEEwQTBCIi8+PHBhdGggZD0iTTEwIDE2QzEwIDE2IDEzIDExIDE2IDExQzE5IDExIDIyIDE2IDIyIDE2QzIyIDE2IDE5IDIxIDE2IDIxQzEzIDIxIDEwIDE2IDEwIDE2WiIgc3Ryb2tlPSIjQzVBMDU5IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=" />
-    <link rel="manifest" href="./manifest.json" />
+    <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,25 +82,33 @@
         border-radius: 10px;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
-    "framer-motion": "https://esm.sh/framer-motion@^12.29.2",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4"
-  }
-}
-</script>
-</head>
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+        "framer-motion": "https://esm.sh/framer-motion@^12.29.2",
+        "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "react": "https://esm.sh/react@^19.2.4"
+      }
+    }
+    </script>
+  </head>
   <body>
     <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
+          // Tentativa de registro relativa à raiz
+          navigator.serviceWorker.register('sw.js', { scope: './' })
+            .then(reg => console.log('Lumière SW Registered', reg.scope))
+            .catch(err => {
+              // Silencia o erro 404 em desenvolvimento local se o sw.js não existir
+              if (!window.location.hostname.includes('localhost')) {
+                console.warn('SW Registration delayed or failed:', err);
+              }
+            });
         });
       }
     </script>
