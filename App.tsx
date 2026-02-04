@@ -143,242 +143,50 @@ const LoginScreen: React.FC<{ onLoginSuccess: (response: any) => void }> = ({ on
   );
 };
 
-const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-[#0A0A0B]/80 backdrop-blur-md"
-        />
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-sm glass-card rounded-[32px] overflow-hidden shadow-2xl border border-white/20"
-        >
-          <div className="black-piano p-8 text-center relative overflow-hidden">
-            <div className="absolute inset-0 iridescent-bg opacity-10"></div>
-            <h2 className="text-3xl font-playfair font-bold text-[#C5A059] tracking-widest relative z-10">D'LUMIÈRE</h2>
-            <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] mt-2 font-bold relative z-10">Management Excellence</p>
-          </div>
-          
-          <div className="p-8 space-y-8 text-center">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Versão Atual</p>
-              <p className="text-sm font-bold text-[#0A0A0B]">1.2.5 <span className="text-gray-300 font-medium">|</span> 2026</p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Desenvolvido por</p>
-              <p className="text-sm font-playfair font-bold text-[#0A0A0B]">Dalton D. & Daniele M.</p>
-            </div>
-
-            <div className="pt-4 border-t border-gray-100 space-y-4">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Social & Contato</p>
-              <div className="flex justify-center gap-4">
-                <a 
-                  href="https://instagram.com/dani_mallet_lashdesigner" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 hover:bg-[#C5A059]/10 text-gray-600 hover:text-[#C5A059] transition-all border border-gray-100"
-                >
-                  <Instagram size={14} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Instagram</span>
-                </a>
-              </div>
-            </div>
-
-            <button 
-              onClick={onClose}
-              className="w-full py-4 rounded-2xl black-piano text-[#C5A059] text-[10px] font-black uppercase tracking-widest shadow-xl btn-3d border border-[#C5A059]/20"
-            >
-              Fechar
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-};
-
-const Sidebar = () => {
-  const { clinicInfo, setShowAbout, handleInstallClick } = useApp();
-  
-  return (
-    <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 black-piano text-white flex-col z-50 border-r border-[#C5A059]/10">
-      <div className="p-8">
-        <h1 className="text-3xl font-playfair tracking-widest text-[#C5A059] font-bold uppercase truncate">{clinicInfo.name}</h1>
-        <p className="text-[10px] tracking-[0.2em] text-[#C5A059]/60 uppercase mt-1 truncate">{clinicInfo.tagline}</p>
-      </div>
-      
-      <nav className="flex-1 px-4 py-4 space-y-2">
-        <NavLink 
-          to="/" 
-          className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-        >
-          <LayoutDashboard size={20} />
-          <span className="font-medium text-sm tracking-wide">Dashboard</span>
-        </NavLink>
-        <NavLink 
-          to="/agenda" 
-          className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-        >
-          <Calendar size={20} />
-          <span className="font-medium text-sm tracking-wide">Agenda</span>
-        </NavLink>
-        <NavLink 
-          to="/clients" 
-          className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-        >
-          <Users size={20} />
-          <span className="font-medium text-sm tracking-wide">Clientes</span>
-        </NavLink>
-      </nav>
-
-      <div className="p-4 border-t border-white/5 space-y-1">
-        <div 
-          onClick={handleInstallClick}
-          className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-[#C5A059] cursor-pointer transition-colors group rounded-xl"
-        >
-          <Download size={20} className="group-hover:translate-y-1 transition-transform duration-500" />
-          <span className="font-medium text-sm">Baixar App</span>
-        </div>
-        <div 
-          onClick={() => setShowAbout(true)}
-          className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-[#C5A059] cursor-pointer transition-colors group"
-        >
-          <Info size={20} className="group-hover:scale-110 transition-transform duration-300" />
-          <span className="font-medium text-sm">Sobre</span>
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-const BottomNav = () => {
-  const { setShowAbout, handleInstallClick } = useApp();
-  return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 black-piano border-t border-[#C5A059]/20 h-20 flex items-center justify-around px-4 z-50">
-      <NavLink 
-        to="/" 
-        className={({ isActive }) => `flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-[#C5A059]' : 'text-gray-600'}`}
-      >
-        <LayoutDashboard size={22} />
-        <span className="text-[9px] font-bold uppercase tracking-widest">Início</span>
-      </NavLink>
-      <NavLink 
-        to="/agenda" 
-        className={({ isActive }) => `flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-[#C5A059]' : 'text-gray-600'}`}
-      >
-        <Calendar size={22} />
-        <span className="text-[9px] font-bold uppercase tracking-widest">Agenda</span>
-      </NavLink>
-      <NavLink 
-        to="/clients" 
-        className={({ isActive }) => `flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-[#C5A059]' : 'text-gray-600'}`}
-      >
-        <Users size={22} />
-        <span className="text-[9px] font-bold uppercase tracking-widest">Clientes</span>
-      </NavLink>
-      <div 
-        onClick={handleInstallClick}
-        className="flex flex-col items-center gap-1 text-gray-600 hover:text-[#C5A059] cursor-pointer"
-      >
-        <Download size={22} />
-        <span className="text-[9px] font-bold uppercase tracking-widest">Baixar</span>
-      </div>
-      <div 
-        onClick={() => setShowAbout(true)}
-        className="flex flex-col items-center gap-1 text-gray-600 cursor-pointer"
-      >
-        <Info size={22} />
-        <span className="text-[9px] font-bold uppercase tracking-widest">Sobre</span>
-      </div>
-    </nav>
-  );
-};
-
-const Header = () => {
-  const { clinicInfo, user, logout } = useApp();
-  const location = useLocation();
-  const [now, setNow] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const getTitle = () => {
-    switch(location.pathname) {
-      case '/': return 'Painel Executivo';
-      case '/clients': return 'Gestão de Clientes';
-      case '/agenda': return 'Agenda D.Lumière';
-      default: return clinicInfo.name;
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    const d = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-    const t = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    return `${d} | ${t}`;
-  };
-
-  return (
-    <header className="fixed top-0 right-0 left-0 lg:left-64 h-20 bg-[#F5F5F7]/80 backdrop-blur-xl z-40 px-6 lg:px-10 flex items-center justify-between border-b border-gray-200/50">
-      <div className="flex flex-col">
-        <h2 className="text-lg lg:text-xl font-playfair font-semibold text-[#0A0A0B] leading-tight tracking-tight">{getTitle()}</h2>
-        <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-widest font-medium mt-0.5">{formatDate(now)}</p>
-      </div>
-      
-      <div className="flex items-center gap-4 lg:gap-8">
-        <button className="relative text-gray-400 hover:text-[#C5A059] transition-colors p-2 bg-white rounded-full shadow-sm border border-gray-100">
-          <Bell size={18} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-[#C5A059] rounded-full border-2 border-[#F5F5F7]"></span>
-        </button>
-
-        {user && (
-          <div className="flex items-center gap-3 pl-4 lg:pl-8 border-l border-gray-200">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-[#0A0A0B] uppercase tracking-wide truncate max-w-[150px]">{user.name}</p>
-              <button 
-                onClick={logout}
-                className="text-[9px] text-red-400 font-semibold uppercase tracking-widest flex items-center gap-1 hover:text-red-500 transition-colors"
-              >
-                <LogOut size={8} /> Sair
-              </button>
-            </div>
-            <img 
-              src={user.picture} 
-              className="w-10 h-10 rounded-full border border-[#C5A059]/40 shadow-inner object-cover" 
-              alt={user.name} 
-            />
-          </div>
-        )}
-      </div>
-    </header>
-  );
-};
-
 const App: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [clinicInfo, setClinicInfo] = useState({ name: 'D.LUMIÈRE', tagline: 'Esthétique de Luxe', logo: null });
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [showAbout, setShowAbout] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  
-  // Persistência de usuário logado
+  // --- INICIALIZAÇÃO COM CACHE LOCAL ---
+  const [appointments, setAppointments] = useState<Appointment[]>(() => {
+    const saved = localStorage.getItem('dlumiere_appointments');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [clients, setClients] = useState<Client[]>(() => {
+    const saved = localStorage.getItem('dlumiere_clients');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [clinicInfo, setClinicInfo] = useState(() => {
+    const saved = localStorage.getItem('dlumiere_clinic');
+    return saved ? JSON.parse(saved) : { name: 'D.LUMIÈRE', tagline: 'Esthétique de Luxe', logo: null };
+  });
+  const [reminders, setReminders] = useState<Reminder[]>(() => {
+    const saved = localStorage.getItem('dlumiere_reminders');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [user, setUser] = useState<GoogleUser | null>(() => {
     const saved = localStorage.getItem('lumiere_user');
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [showAbout, setShowAbout] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // --- SINCRONIZAÇÃO DE CACHE (STATE -> LOCALSTORAGE) ---
+  useEffect(() => {
+    localStorage.setItem('dlumiere_appointments', JSON.stringify(appointments));
+  }, [appointments]);
+
+  useEffect(() => {
+    localStorage.setItem('dlumiere_clients', JSON.stringify(clients));
+  }, [clients]);
+
+  useEffect(() => {
+    localStorage.setItem('dlumiere_clinic', JSON.stringify(clinicInfo));
+  }, [clinicInfo]);
+
+  useEffect(() => {
+    localStorage.setItem('dlumiere_reminders', JSON.stringify(reminders));
+  }, [reminders]);
+
+  // --- LÓGICA DE LOGIN ---
   const parseJwt = (token: string) => {
     try {
       const base64Url = token.split('.')[1];
@@ -406,28 +214,40 @@ const App: React.FC = () => {
 
   const logout = () => {
     localStorage.removeItem('lumiere_user');
+    // Limpar cache ao sair para privacidade, opcionalmente
+    localStorage.removeItem('dlumiere_appointments');
+    localStorage.removeItem('dlumiere_clients');
+    localStorage.removeItem('dlumiere_clinic');
+    localStorage.removeItem('dlumiere_reminders');
     setUser(null);
     window.location.reload();
   };
 
-  // Firestore Real-time Listeners
+  // --- FIRESTORE REAL-TIME SYNC ---
   useEffect(() => {
-    if (!user) return; // Só ouve se estiver logado
+    if (!user) return;
 
+    // Sincroniza Appointments
     const unsubAppointments = onSnapshot(collection(db, "appointments"), (snapshot) => {
-      setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Appointment)));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Appointment));
+      setAppointments(data);
     });
 
+    // Sincroniza Clientes
     const unsubClients = onSnapshot(collection(db, "clients"), (snapshot) => {
       if (!snapshot.empty) {
-        setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
+        setClients(data);
       }
     });
 
+    // Sincroniza Lembretes
     const unsubReminders = onSnapshot(collection(db, "reminders"), (snapshot) => {
-      setReminders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reminder)));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reminder));
+      setReminders(data);
     });
 
+    // Sincroniza Configurações da Clínica
     const unsubClinic = onSnapshot(doc(db, "settings", "clinicInfo"), (docSnap) => {
       if (docSnap.exists()) {
         setClinicInfo(docSnap.data() as any);
@@ -442,6 +262,7 @@ const App: React.FC = () => {
     };
   }, [user]);
 
+  // PWA Install logic
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -459,6 +280,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Funções de Escrita (Firestore -> Gatilha onSnapshot -> Gatilha Cache Local)
   const addAppointment = async (appointment: Appointment) => {
     await addDoc(collection(db, "appointments"), appointment);
   };
@@ -529,6 +351,137 @@ const App: React.FC = () => {
         </div>
       </HashRouter>
     </AppContext.Provider>
+  );
+};
+
+// Componentes Auxiliares (mantidos do arquivo original para integridade)
+const Sidebar = () => {
+  const { clinicInfo, setShowAbout, handleInstallClick } = useApp();
+  return (
+    <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 black-piano text-white flex-col z-50 border-r border-[#C5A059]/10">
+      <div className="p-8">
+        <h1 className="text-3xl font-playfair tracking-widest text-[#C5A059] font-bold uppercase truncate">{clinicInfo.name}</h1>
+        <p className="text-[10px] tracking-[0.2em] text-[#C5A059]/60 uppercase mt-1 truncate">{clinicInfo.tagline}</p>
+      </div>
+      <nav className="flex-1 px-4 py-4 space-y-2">
+        <NavLink to="/" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+          <LayoutDashboard size={20} /> <span className="font-medium text-sm tracking-wide">Dashboard</span>
+        </NavLink>
+        <NavLink to="/agenda" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+          <Calendar size={20} /> <span className="font-medium text-sm tracking-wide">Agenda</span>
+        </NavLink>
+        <NavLink to="/clients" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+          <Users size={20} /> <span className="font-medium text-sm tracking-wide">Clientes</span>
+        </NavLink>
+      </nav>
+      <div className="p-4 border-t border-white/5 space-y-1">
+        <div onClick={handleInstallClick} className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-[#C5A059] cursor-pointer transition-colors group rounded-xl">
+          <Download size={20} className="group-hover:translate-y-1 transition-transform duration-500" /> <span className="font-medium text-sm">Baixar App</span>
+        </div>
+        <div onClick={() => setShowAbout(true)} className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-[#C5A059] cursor-pointer transition-colors group">
+          <Info size={20} className="group-hover:scale-110 transition-transform duration-300" /> <span className="font-medium text-sm">Sobre</span>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+const Header = () => {
+  const { clinicInfo, user, logout } = useApp();
+  const location = useLocation();
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getTitle = () => {
+    switch(location.pathname) {
+      case '/': return 'Painel Executivo';
+      case '/clients': return 'Gestão de Clientes';
+      case '/agenda': return 'Agenda D.Lumière';
+      default: return clinicInfo.name;
+    }
+  };
+
+  return (
+    <header className="fixed top-0 right-0 left-0 lg:left-64 h-20 bg-[#F5F5F7]/80 backdrop-blur-xl z-40 px-6 lg:px-10 flex items-center justify-between border-b border-gray-200/50">
+      <div className="flex flex-col">
+        <h2 className="text-lg lg:text-xl font-playfair font-semibold text-[#0A0A0B] tracking-tight">{getTitle()}</h2>
+        <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-widest font-medium mt-0.5">
+          {now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })} | {now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      </div>
+      <div className="flex items-center gap-4 lg:gap-8">
+        <button className="relative text-gray-400 hover:text-[#C5A059] transition-colors p-2 bg-white rounded-full shadow-sm border border-gray-100">
+          <Bell size={18} /> <span className="absolute top-2 right-2 w-2 h-2 bg-[#C5A059] rounded-full border-2 border-[#F5F5F7]"></span>
+        </button>
+        {user && (
+          <div className="flex items-center gap-3 pl-4 lg:pl-8 border-l border-gray-200">
+            <div className="text-right hidden sm:block">
+              <p className="text-xs font-bold text-[#0A0A0B] uppercase tracking-wide truncate max-w-[150px]">{user.name}</p>
+              <button onClick={logout} className="text-[9px] text-red-400 font-semibold uppercase tracking-widest flex items-center gap-1 hover:text-red-500 transition-colors">
+                <LogOut size={8} /> Sair
+              </button>
+            </div>
+            <img src={user.picture} className="w-10 h-10 rounded-full border border-[#C5A059]/40 shadow-inner object-cover" alt={user.name} />
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+const BottomNav = () => {
+  const { setShowAbout, handleInstallClick } = useApp();
+  return (
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 black-piano border-t border-[#C5A059]/20 h-20 flex items-center justify-around px-4 z-50">
+      <NavLink to="/" className={({ isActive }) => `flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-[#C5A059]' : 'text-gray-600'}`}>
+        <LayoutDashboard size={22} /> <span className="text-[9px] font-bold uppercase tracking-widest">Início</span>
+      </NavLink>
+      <NavLink to="/agenda" className={({ isActive }) => `flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-[#C5A059]' : 'text-gray-600'}`}>
+        <Calendar size={22} /> <span className="text-[9px] font-bold uppercase tracking-widest">Agenda</span>
+      </NavLink>
+      <NavLink to="/clients" className={({ isActive }) => `flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-[#C5A059]' : 'text-gray-600'}`}>
+        <Users size={22} /> <span className="text-[9px] font-bold uppercase tracking-widest">Clientes</span>
+      </NavLink>
+      <div onClick={handleInstallClick} className="flex flex-col items-center gap-1 text-gray-600 hover:text-[#C5A059] cursor-pointer">
+        <Download size={22} /> <span className="text-[9px] font-bold uppercase tracking-widest">Baixar</span>
+      </div>
+      <div onClick={() => setShowAbout(true)} className="flex flex-col items-center gap-1 text-gray-600 cursor-pointer">
+        <Info size={22} /> <span className="text-[9px] font-bold uppercase tracking-widest">Sobre</span>
+      </div>
+    </nav>
+  );
+};
+
+const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-[#0A0A0B]/80 backdrop-blur-md" />
+        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-sm glass-card rounded-[32px] overflow-hidden shadow-2xl border border-white/20">
+          <div className="black-piano p-8 text-center relative overflow-hidden">
+            <div className="absolute inset-0 iridescent-bg opacity-10"></div>
+            <h2 className="text-3xl font-playfair font-bold text-[#C5A059] tracking-widest relative z-10">D'LUMIÈRE</h2>
+            <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] mt-2 font-bold relative z-10">Management Excellence</p>
+          </div>
+          <div className="p-8 space-y-8 text-center">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Versão Atual</p>
+              <p className="text-sm font-bold text-[#0A0A0B]">1.2.8 <span className="text-gray-300 font-medium">|</span> 2026</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Desenvolvido por</p>
+              <p className="text-sm font-playfair font-bold text-[#0A0A0B]">Dalton D. & Daniele M.</p>
+            </div>
+            <button onClick={onClose} className="w-full py-4 rounded-2xl black-piano text-[#C5A059] text-[10px] font-black uppercase tracking-widest shadow-xl btn-3d border border-[#C5A059]/20">Fechar</button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 };
 
