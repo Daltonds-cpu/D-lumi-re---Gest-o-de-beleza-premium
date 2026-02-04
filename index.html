@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0A0A0B" />
     <!-- Favicon embutido para evitar 404 favicon.ico -->
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSIjMEEwQTBCIi8+PHBhdGggZD0iTTEwIDE2QzEwIDE2IDEzIDExIDE2IDExQzE5IDExIDIyIDE2IDIyIDE2QzIyIDE2IDE5IDIxIDE2IDIxQzEzIDIxIDEwIDE2IDEwIDE2WiIgc3Ryb2tlPSIjQzVBMDU5IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=" />
-    <link rel="manifest" href="manifest.json" crossorigin="use-credentials" />
+    <link rel="manifest" href="manifest.json" />
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -101,18 +101,14 @@
   <body>
     <div id="root"></div>
     
-    <!-- ENTRADA DO APLICATIVO - UTILIZANDO CAMINHO COMPLETO -->
-    <script type="module" src="./index.tsx"></script>
+    <!-- ENTRADA DO APLICATIVO -->
+    <script type="module" src="index.tsx"></script>
 
     <script>
+      // Service Worker silencioso para não quebrar o carregamento caso o arquivo falte no deploy
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log('Lumière SW Active'))
-            .catch(e => {
-              // Registro falhou, mas não interrompe a aplicação principal
-              console.debug('SW silent fail', e);
-            });
+          navigator.serviceWorker.register('sw.js').catch(() => {});
         });
       }
     </script>
