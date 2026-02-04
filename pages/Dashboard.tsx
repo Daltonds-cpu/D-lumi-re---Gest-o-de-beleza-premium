@@ -23,9 +23,9 @@ import {
   Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ScrollReveal from '../components/ScrollReveal';
+import ScrollReveal from '../components/ScrollReveal.tsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useApp } from '../App';
+import { useApp } from '../App.tsx';
 
 const DatePickerModal = ({ isOpen, onClose, onSelect, selectedDate }: any) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());

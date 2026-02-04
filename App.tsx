@@ -16,10 +16,10 @@ import {
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Dashboard from './pages/Dashboard';
-import Clients from './pages/Clients';
-import Agenda from './pages/Agenda';
-import { Appointment, Reminder } from './types';
+import Dashboard from './pages/Dashboard.tsx';
+import Clients from './pages/Clients.tsx';
+import Agenda from './pages/Agenda.tsx';
+import { Appointment, Reminder } from './types.ts';
 
 // Shared Context for global state persistence
 interface AppContextType {
