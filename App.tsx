@@ -213,6 +213,13 @@ const BottomNav = () => {
 const Header = () => {
   const { clinicInfo } = useApp();
   const location = useLocation();
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const getTitle = () => {
     switch(location.pathname) {
       case '/': return 'Painel Executivo';
@@ -222,11 +229,17 @@ const Header = () => {
     }
   };
 
+  const formatDate = (date: Date) => {
+    const d = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const t = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `${d} | ${t}`;
+  };
+
   return (
     <header className="fixed top-0 right-0 left-0 lg:left-64 h-20 bg-[#F5F5F7]/80 backdrop-blur-xl z-40 px-6 lg:px-10 flex items-center justify-between border-b border-gray-200/50">
       <div className="flex flex-col">
         <h2 className="text-lg lg:text-xl font-playfair font-semibold text-[#0A0A0B] leading-tight tracking-tight">{getTitle()}</h2>
-        <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-widest font-medium mt-0.5">24 de Outubro, 2024</p>
+        <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-widest font-medium mt-0.5">{formatDate(now)}</p>
       </div>
       
       <div className="flex items-center gap-4 lg:gap-8">
