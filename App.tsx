@@ -34,8 +34,8 @@ import {
   getDoc
 } from 'firebase/firestore';
 
-// CONFIGURAÇÃO DO GOOGLE CLIENT ID - SUBSTITUA PELO SEU
-const GOOGLE_CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
+// CONFIGURAÇÃO DO GOOGLE CLIENT ID FORNECIDO PELO USUÁRIO
+const GOOGLE_CLIENT_ID = "262684864293-gc2uavphil9uv1mnb1hqi4q17m02k3rt.apps.googleusercontent.com";
 
 interface GoogleUser {
   name: string;
@@ -72,20 +72,29 @@ export const useApp = () => {
   return context;
 };
 
-// Fixed: Define LoginScreen as a React.FC to properly handle standard props like 'key' when used inside AnimatePresence.
+// Componente de Tela de Bloqueio (Splash Screen)
 const LoginScreen: React.FC<{ onLoginSuccess: (response: any) => void }> = ({ onLoginSuccess }) => {
   useEffect(() => {
     if ((window as any).google) {
       (window as any).google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: onLoginSuccess
+        callback: onLoginSuccess,
+        auto_select: false,
+        cancel_on_tap_outside: false
       });
       (window as any).google.accounts.id.renderButton(
         document.getElementById("btn-login-google-splash"),
-        { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 280 }
+        { 
+          theme: "outline", 
+          size: "large", 
+          shape: "pill", 
+          text: "continue_with", 
+          width: 280,
+          logo_alignment: "left"
+        }
       );
     }
-  }, []);
+  }, [onLoginSuccess]);
 
   return (
     <motion.div 
@@ -94,36 +103,41 @@ const LoginScreen: React.FC<{ onLoginSuccess: (response: any) => void }> = ({ on
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center black-piano overflow-hidden"
     >
       <div className="absolute inset-0 iridescent-bg opacity-10"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#C5A059]/5 blur-[120px] rounded-full"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#C5A059]/10 blur-[150px] rounded-full"></div>
       
       <motion.div 
-        initial={{ y: 20, opacity: 0 }}
+        initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 1 }}
-        className="relative z-10 text-center space-y-8 px-6"
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        className="relative z-10 text-center space-y-10 px-6"
       >
-        <div className="space-y-3">
+        <div className="space-y-4">
           <motion.div 
-            animate={{ rotate: [0, 10, 0] }}
-            transition={{ repeat: Infinity, duration: 4 }}
-            className="flex justify-center mb-6"
+            animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+            className="flex justify-center mb-8"
           >
-            <Sparkles className="text-[#C5A059] w-12 h-12" />
+            <div className="p-5 rounded-full border border-[#C5A059]/30 bg-[#C5A059]/5 backdrop-blur-sm">
+              <Sparkles className="text-[#C5A059] w-12 h-12" />
+            </div>
           </motion.div>
-          <h1 className="text-5xl lg:text-7xl font-playfair font-bold text-[#C5A059] tracking-[0.15em]">D'LUMIÈRE</h1>
-          <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-[0.6em] font-black">Gestão de Excelência</p>
+          <h1 className="text-5xl lg:text-7xl font-playfair font-bold text-[#C5A059] tracking-[0.2em] uppercase">D'LUMIÈRE</h1>
+          <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-[0.6em] font-black pl-2">Gestão de Excelência</p>
         </div>
 
-        <div className="pt-10 flex flex-col items-center gap-6">
-          <div id="btn-login-google-splash" className="min-h-[50px]"></div>
-          <p className="text-[9px] text-gray-600 uppercase tracking-widest max-w-[200px] leading-loose">
-            Acesse seu painel exclusivo de beleza premium
-          </p>
+        <div className="pt-12 flex flex-col items-center gap-8">
+          <div id="btn-login-google-splash" className="min-h-[50px] transition-transform hover:scale-105 active:scale-95"></div>
+          <div className="space-y-2">
+            <p className="text-[9px] text-gray-500 uppercase tracking-[0.3em] font-bold">Acesso Restrito</p>
+            <p className="text-[10px] text-gray-600 font-medium max-w-[250px] leading-relaxed italic">
+              "A beleza é o esplendor da verdade."
+            </p>
+          </div>
         </div>
       </motion.div>
 
-      <div className="absolute bottom-10 left-0 right-0 text-center">
-         <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Esthétique de Luxe &copy; 2026</p>
+      <div className="absolute bottom-12 left-0 right-0 text-center">
+         <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.4em]">Esthétique de Luxe &copy; 2026</p>
       </div>
     </motion.div>
   );
@@ -157,7 +171,7 @@ const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           <div className="p-8 space-y-8 text-center">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Versão Atual</p>
-              <p className="text-sm font-bold text-[#0A0A0B]">1.2 <span className="text-gray-300 font-medium">|</span> 2026</p>
+              <p className="text-sm font-bold text-[#0A0A0B]">1.2.5 <span className="text-gray-300 font-medium">|</span> 2026</p>
             </div>
 
             <div className="space-y-2">
@@ -175,7 +189,7 @@ const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
                   className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 hover:bg-[#C5A059]/10 text-gray-600 hover:text-[#C5A059] transition-all border border-gray-100"
                 >
                   <Instagram size={14} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">dani_mallet_lashdesigner</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Instagram</span>
                 </a>
               </div>
             </div>
@@ -358,6 +372,8 @@ const App: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAbout, setShowAbout] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  
+  // Persistência de usuário logado
   const [user, setUser] = useState<GoogleUser | null>(() => {
     const saved = localStorage.getItem('lumiere_user');
     return saved ? JSON.parse(saved) : null;
@@ -390,25 +406,20 @@ const App: React.FC = () => {
 
   const logout = () => {
     localStorage.removeItem('lumiere_user');
+    setUser(null);
     window.location.reload();
   };
 
   // Firestore Real-time Listeners
   useEffect(() => {
+    if (!user) return; // Só ouve se estiver logado
+
     const unsubAppointments = onSnapshot(collection(db, "appointments"), (snapshot) => {
       setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Appointment)));
     });
 
     const unsubClients = onSnapshot(collection(db, "clients"), (snapshot) => {
-      if (snapshot.empty) {
-        // Seed initial data if empty
-        const initialClients = [
-          { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11', birthday: '1995-10-24', notes: '' },
-          { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', whatsapp: '11912345678', facebook: '', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12', birthday: '1980-07-20', notes: '' },
-          { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', whatsapp: '', facebook: 'anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13', birthday: '1993-03-30', notes: '' },
-        ];
-        initialClients.forEach(c => setDoc(doc(db, "clients", c.id), c));
-      } else {
+      if (!snapshot.empty) {
         setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
       }
     });
@@ -429,7 +440,7 @@ const App: React.FC = () => {
       unsubReminders();
       unsubClinic();
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -496,6 +507,7 @@ const App: React.FC = () => {
                 key="app" 
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
+                transition={{ duration: 0.8 }}
                 className="flex flex-col lg:flex-row min-h-screen"
               >
                 <Sidebar />
