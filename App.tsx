@@ -19,14 +19,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Dashboard from './pages/Dashboard.tsx';
 import Clients from './pages/Clients.tsx';
 import Agenda from './pages/Agenda.tsx';
-import { Appointment, Reminder } from './types.ts';
+import { Appointment, Reminder, Client } from './types.ts';
+import { db } from './firebase.ts';
+import { 
+  collection, 
+  onSnapshot, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  setDoc,
+  getDoc
+} from 'firebase/firestore';
 
 // Shared Context for global state persistence
 interface AppContextType {
   appointments: Appointment[];
   addAppointment: (appointment: Appointment) => void;
   updateAppointment: (appointment: Appointment) => void;
-  clients: any[];
+  clients: Client[];
   clinicInfo: {
     name: string;
     tagline: string;
@@ -77,7 +88,7 @@ const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           <div className="p-8 space-y-8 text-center">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Versão Atual</p>
-              <p className="text-sm font-bold text-[#0A0A0B]">1.0 <span className="text-gray-300 font-medium">|</span> 2026</p>
+              <p className="text-sm font-bold text-[#0A0A0B]">1.1 <span className="text-gray-300 font-medium">|</span> 2026</p>
             </div>
 
             <div className="space-y-2">
@@ -114,7 +125,7 @@ const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 };
 
 const Sidebar = () => {
-  const { clinicInfo, setShowAbout, handleInstallClick, deferredPrompt } = useApp();
+  const { clinicInfo, setShowAbout, handleInstallClick } = useApp();
   
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 black-piano text-white flex-col z-50 border-r border-[#C5A059]/10">
@@ -168,7 +179,7 @@ const Sidebar = () => {
 };
 
 const BottomNav = () => {
-  const { setShowAbout, handleInstallClick, deferredPrompt } = useApp();
+  const { setShowAbout, handleInstallClick } = useApp();
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 black-piano border-t border-[#C5A059]/20 h-20 flex items-center justify-around px-4 z-50">
       <NavLink 
@@ -262,55 +273,50 @@ const Header = () => {
 };
 
 const App: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(() => {
-    const saved = localStorage.getItem('lumiere_appointments');
-    return saved ? JSON.parse(saved) : [
-      { id: '1', clientId: '1', clientName: 'Helena Roitman', date: '2024-10-24', time: '14:00', service: 'Limpeza de Pele Diamond', status: 'scheduled' },
-      { id: '2', clientId: '2', clientName: 'Beatriz Segall', date: '2024-10-24', time: '15:30', service: 'Microagulhamento', status: 'scheduled' },
-      { id: '3', clientId: '3', clientName: 'Clara Nunes', date: '2024-10-24', time: '17:00', service: 'Drenagem Linfática', status: 'scheduled' },
-    ];
-  });
-
-  const [clinicInfo, setClinicInfo] = useState(() => {
-    const saved = localStorage.getItem('lumiere_clinic_info');
-    return saved ? JSON.parse(saved) : {
-      name: 'D.LUMIÈRE',
-      tagline: 'Esthétique de Luxe',
-      logo: null
-    };
-  });
-
-  const [reminders, setReminders] = useState<Reminder[]>(() => {
-    const saved = localStorage.getItem('lumiere_reminders');
-    return saved ? JSON.parse(saved) : [
-      { id: '1', category: 'WhatsApp', text: 'Confirmar agendas de amanhã com clientes pendentes.' }
-    ];
-  });
-
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clinicInfo, setClinicInfo] = useState({ name: 'D.LUMIÈRE', tagline: 'Esthétique de Luxe', logo: null });
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAbout, setShowAbout] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  const clients = [
-    { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11', birthday: '1995-10-24' },
-    { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', whatsapp: '11912345678', facebook: '', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12', birthday: '1980-07-20' },
-    { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', whatsapp: '', facebook: 'anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13', birthday: '1993-03-30' },
-    { id: '4', name: 'Bruna Marquezine', phone: '(21) 97766-5544', instagram: '@brunamarquezine', whatsapp: '21977665544', facebook: 'bruna', email: 'bruna@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=14', birthday: '1995-08-04' },
-    { id: '5', name: 'Helena Roitman', phone: '(11) 92222-3333', instagram: '@helena', whatsapp: '11922223333', facebook: '', email: 'helena@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=1', birthday: '1982-10-24' },
-    { id: '6', name: 'Beatriz Segall', phone: '(11) 94444-5555', instagram: '@beatriz', whatsapp: '', facebook: '', email: 'beatriz@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=2', birthday: '1926-10-09' },
-    { id: '7', name: 'Clara Nunes', phone: '(11) 96666-7777', instagram: '@clara', whatsapp: '11966667777', facebook: 'claranunes', email: 'clara@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=3', birthday: '1942-08-12' },
-  ];
-
+  // Firestore Real-time Listeners
   useEffect(() => {
-    localStorage.setItem('lumiere_appointments', JSON.stringify(appointments));
-  }, [appointments]);
+    const unsubAppointments = onSnapshot(collection(db, "appointments"), (snapshot) => {
+      setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Appointment)));
+    });
 
-  useEffect(() => {
-    localStorage.setItem('lumiere_clinic_info', JSON.stringify(clinicInfo));
-  }, [clinicInfo]);
+    const unsubClients = onSnapshot(collection(db, "clients"), (snapshot) => {
+      if (snapshot.empty) {
+        // Seed initial data if empty
+        const initialClients = [
+          { id: '1', name: 'Marina R. Barbosa', phone: '(11) 98765-4321', instagram: '@marinaruybarbosa', whatsapp: '11987654321', facebook: 'marinaruybarbosa', email: 'marina@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=11', birthday: '1995-10-24', notes: '' },
+          { id: '2', name: 'Gisele Bündchen', phone: '(11) 91234-5678', instagram: '@gisele', whatsapp: '11912345678', facebook: '', email: 'gisele@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=12', birthday: '1980-07-20', notes: '' },
+          { id: '3', name: 'Anitta Machado', phone: '(21) 99988-7766', instagram: '@anitta', whatsapp: '', facebook: 'anitta', email: 'anitta@gmail.com', photoUrl: 'https://picsum.photos/200/200?random=13', birthday: '1993-03-30', notes: '' },
+        ];
+        initialClients.forEach(c => setDoc(doc(db, "clients", c.id), c));
+      } else {
+        setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
+      }
+    });
 
-  useEffect(() => {
-    localStorage.setItem('lumiere_reminders', JSON.stringify(reminders));
-  }, [reminders]);
+    const unsubReminders = onSnapshot(collection(db, "reminders"), (snapshot) => {
+      setReminders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reminder)));
+    });
+
+    const unsubClinic = onSnapshot(doc(db, "settings", "clinicInfo"), (docSnap) => {
+      if (docSnap.exists()) {
+        setClinicInfo(docSnap.data() as any);
+      }
+    });
+
+    return () => {
+      unsubAppointments();
+      unsubClients();
+      unsubReminders();
+      unsubClinic();
+    };
+  }, []);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -323,32 +329,31 @@ const App: React.FC = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
+      if (outcome === 'accepted') setDeferredPrompt(null);
     } else {
       alert("Para instalar D'Lumière:\n\nNo iPhone (iOS): Toque em 'Compartilhar' e selecione 'Adicionar à Tela de Início'.\n\nNo Android ou Desktop: Procure a opção 'Instalar Aplicativo' no menu do navegador.");
     }
   };
 
-  const addAppointment = (appointment: Appointment) => {
-    setAppointments(prev => [...prev, appointment]);
+  const addAppointment = async (appointment: Appointment) => {
+    await addDoc(collection(db, "appointments"), appointment);
   };
 
-  const updateAppointment = (appointment: Appointment) => {
-    setAppointments(prev => prev.map(a => a.id === appointment.id ? appointment : a));
+  const updateAppointment = async (appointment: Appointment) => {
+    const { id, ...data } = appointment;
+    await updateDoc(doc(db, "appointments", id), data);
   };
 
-  const updateClinicInfo = (info: any) => {
-    setClinicInfo(info);
+  const updateClinicInfo = async (info: any) => {
+    await setDoc(doc(db, "settings", "clinicInfo"), info);
   };
 
-  const addReminder = (reminder: Reminder) => {
-    setReminders(prev => [reminder, ...prev]);
+  const addReminder = async (reminder: Reminder) => {
+    await addDoc(collection(db, "reminders"), reminder);
   };
 
-  const deleteReminder = (id: string) => {
-    setReminders(prev => prev.filter(r => r.id !== id));
+  const deleteReminder = async (id: string) => {
+    await deleteDoc(doc(db, "reminders", id));
   };
 
   return (
