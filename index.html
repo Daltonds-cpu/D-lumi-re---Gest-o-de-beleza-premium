@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lumière | Premium Management</title>
     <meta name="theme-color" content="#0A0A0B" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSIjMEEwQTBCIi8+PHBhdGggZD0iTTEwIDE2QzEwIDE2IDEzIDExIDE2IDExQzE5IDExIDIyIDE2IDIyIDE2QzIyIDE2IDE5IDIxIDE2IDIxQzEzIDIxIDEwIDE2IDEwIDE2WiIgc3Ryb2tlPSIjQzVBMDU5IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=" />
+    <link rel="manifest" href="./manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,6 +25,7 @@
         background-color: var(--soft-gray);
         color: var(--black-piano);
         -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
       }
       .font-playfair {
         font-family: 'Playfair Display', serif;
@@ -97,7 +99,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Registration failed:', err));
+          navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
         });
       }
     </script>

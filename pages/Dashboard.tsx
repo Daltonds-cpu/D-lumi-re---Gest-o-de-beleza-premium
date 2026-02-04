@@ -739,12 +739,13 @@ const Dashboard: React.FC = () => {
             </ScrollReveal>
 
             <ScrollReveal delay={0.5}>
-              <div className="glass-card p-6 lg:p-8 rounded-[28px] h-full premium-shadow border-l-4 border-[#C5A059]/30">
+              <div className="glass-card p-6 lg:p-8 rounded-[28px] h-full premium-shadow border-l-4 border-[#C5A059]/30 relative overflow-hidden">
                 <div className="flex justify-between items-center mb-6 lg:mb-8">
                   <h3 className="font-playfair font-bold text-lg text-[#0A0A0B]">Lembretes</h3>
                   <button 
                     onClick={() => setIsReminderModalOpen(true)}
-                    className="p-2 rounded-lg bg-[#C5A059]/10 text-[#C5A059] hover:bg-[#C5A059]/20 transition-all active:scale-90"
+                    className="p-2.5 rounded-xl bg-[#C5A059]/10 text-[#C5A059] hover:bg-[#C5A059] hover:text-[#0A0A0B] transition-all active:scale-90 border border-[#C5A059]/20"
+                    title="Adicionar Lembrete"
                   >
                     <Plus size={18} strokeWidth={3} />
                   </button>
@@ -752,13 +753,14 @@ const Dashboard: React.FC = () => {
                 <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
                   {reminders.length > 0 ? (
                     reminders.map((reminder) => (
-                      <div key={reminder.id} className="p-4 bg-white/40 border border-gray-100 rounded-2xl relative overflow-hidden group">
+                      <div key={reminder.id} className="p-4 bg-white/40 border border-gray-100 rounded-2xl relative overflow-hidden group hover:bg-white/60 transition-colors">
                         <div className="absolute left-0 top-0 bottom-0 w-1 gold-gradient"></div>
-                        <div className="flex justify-between items-start">
-                          <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest mb-1.5">{reminder.category}</p>
+                        <div className="flex justify-between items-start mb-1">
+                          <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest">{reminder.category}</p>
                           <button 
                             onClick={() => deleteReminder(reminder.id)}
                             className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all p-1"
+                            title="Excluir Lembrete"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -767,7 +769,8 @@ const Dashboard: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="py-10 text-center opacity-40">
+                    <div className="py-10 text-center opacity-40 flex flex-col items-center">
+                      <FileText size={24} className="mb-2 text-gray-300" />
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sem lembretes ativos</p>
                     </div>
                   )}
