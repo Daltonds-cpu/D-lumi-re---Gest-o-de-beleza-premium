@@ -13,7 +13,9 @@ import {
   Info,
   Instagram,
   ExternalLink,
-  Download
+  Download,
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Dashboard from './pages/Dashboard.tsx';
@@ -31,6 +33,14 @@ import {
   setDoc,
   getDoc
 } from 'firebase/firestore';
+
+// CONFIGURAÇÃO DO GOOGLE CLIENT ID - SUBSTITUA PELO SEU
+const GOOGLE_CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
+
+interface GoogleUser {
+  name: string;
+  picture: string;
+}
 
 // Shared Context for global state persistence
 interface AppContextType {
@@ -50,6 +60,8 @@ interface AppContextType {
   reminders: Reminder[];
   addReminder: (reminder: Reminder) => void;
   deleteReminder: (id: string) => void;
+  user: GoogleUser | null;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -58,6 +70,63 @@ export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
+};
+
+// Fixed: Define LoginScreen as a React.FC to properly handle standard props like 'key' when used inside AnimatePresence.
+const LoginScreen: React.FC<{ onLoginSuccess: (response: any) => void }> = ({ onLoginSuccess }) => {
+  useEffect(() => {
+    if ((window as any).google) {
+      (window as any).google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: onLoginSuccess
+      });
+      (window as any).google.accounts.id.renderButton(
+        document.getElementById("btn-login-google-splash"),
+        { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 280 }
+      );
+    }
+  }, []);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center black-piano overflow-hidden"
+    >
+      <div className="absolute inset-0 iridescent-bg opacity-10"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#C5A059]/5 blur-[120px] rounded-full"></div>
+      
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 1 }}
+        className="relative z-10 text-center space-y-8 px-6"
+      >
+        <div className="space-y-3">
+          <motion.div 
+            animate={{ rotate: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 4 }}
+            className="flex justify-center mb-6"
+          >
+            <Sparkles className="text-[#C5A059] w-12 h-12" />
+          </motion.div>
+          <h1 className="text-5xl lg:text-7xl font-playfair font-bold text-[#C5A059] tracking-[0.15em]">D'LUMIÈRE</h1>
+          <p className="text-[10px] lg:text-xs text-gray-400 uppercase tracking-[0.6em] font-black">Gestão de Excelência</p>
+        </div>
+
+        <div className="pt-10 flex flex-col items-center gap-6">
+          <div id="btn-login-google-splash" className="min-h-[50px]"></div>
+          <p className="text-[9px] text-gray-600 uppercase tracking-widest max-w-[200px] leading-loose">
+            Acesse seu painel exclusivo de beleza premium
+          </p>
+        </div>
+      </motion.div>
+
+      <div className="absolute bottom-10 left-0 right-0 text-center">
+         <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Esthétique de Luxe &copy; 2026</p>
+      </div>
+    </motion.div>
+  );
 };
 
 const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -88,7 +157,7 @@ const AboutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           <div className="p-8 space-y-8 text-center">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Versão Atual</p>
-              <p className="text-sm font-bold text-[#0A0A0B]">1.1 <span className="text-gray-300 font-medium">|</span> 2026</p>
+              <p className="text-sm font-bold text-[#0A0A0B]">1.2 <span className="text-gray-300 font-medium">|</span> 2026</p>
             </div>
 
             <div className="space-y-2">
@@ -222,7 +291,7 @@ const BottomNav = () => {
 };
 
 const Header = () => {
-  const { clinicInfo } = useApp();
+  const { clinicInfo, user, logout } = useApp();
   const location = useLocation();
   const [now, setNow] = useState(new Date());
 
@@ -258,15 +327,25 @@ const Header = () => {
           <Bell size={18} />
           <span className="absolute top-2 right-2 w-2 h-2 bg-[#C5A059] rounded-full border-2 border-[#F5F5F7]"></span>
         </button>
-        <div className="flex items-center gap-3 pl-4 lg:pl-8 border-l border-gray-200">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-[#0A0A0B] uppercase tracking-wide">Gabrielle C.</p>
-            <p className="text-[9px] text-[#C5A059] font-semibold uppercase tracking-widest">Premium Partner</p>
+
+        {user && (
+          <div className="flex items-center gap-3 pl-4 lg:pl-8 border-l border-gray-200">
+            <div className="text-right hidden sm:block">
+              <p className="text-xs font-bold text-[#0A0A0B] uppercase tracking-wide truncate max-w-[150px]">{user.name}</p>
+              <button 
+                onClick={logout}
+                className="text-[9px] text-red-400 font-semibold uppercase tracking-widest flex items-center gap-1 hover:text-red-500 transition-colors"
+              >
+                <LogOut size={8} /> Sair
+              </button>
+            </div>
+            <img 
+              src={user.picture} 
+              className="w-10 h-10 rounded-full border border-[#C5A059]/40 shadow-inner object-cover" 
+              alt={user.name} 
+            />
           </div>
-          <div className="w-10 h-10 rounded-full black-piano border border-[#C5A059]/40 flex items-center justify-center text-[#C5A059] font-playfair text-lg shadow-inner">
-            G
-          </div>
-        </div>
+        )}
       </div>
     </header>
   );
@@ -279,6 +358,40 @@ const App: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAbout, setShowAbout] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [user, setUser] = useState<GoogleUser | null>(() => {
+    const saved = localStorage.getItem('lumiere_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const parseJwt = (token: string) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const handleCredentialResponse = (response: any) => {
+    const profile = parseJwt(response.credential);
+    if (profile) {
+      const userData = {
+        name: profile.name,
+        picture: profile.picture
+      };
+      setUser(userData);
+      localStorage.setItem('lumiere_user', JSON.stringify(userData));
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('lumiere_user');
+    window.location.reload();
+  };
 
   // Firestore Real-time Listeners
   useEffect(() => {
@@ -369,23 +482,38 @@ const App: React.FC = () => {
       handleInstallClick,
       reminders,
       addReminder,
-      deleteReminder
+      deleteReminder,
+      user,
+      logout
     }}>
       <HashRouter>
-        <div className="min-h-screen bg-[#F5F5F7] flex flex-col lg:flex-row">
-          <Sidebar />
-          <main className="flex-1 lg:ml-64 min-h-screen pb-24 lg:pb-12">
-            <Header />
-            <div className="mt-20 px-4 lg:px-10 py-6 lg:py-10">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/agenda" element={<Agenda />} />
-              </Routes>
-            </div>
-          </main>
-          <BottomNav />
-          <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
+        <div className="min-h-screen bg-[#F5F5F7]">
+          <AnimatePresence mode="wait">
+            {!user ? (
+              <LoginScreen key="login" onLoginSuccess={handleCredentialResponse} />
+            ) : (
+              <motion.div 
+                key="app" 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                className="flex flex-col lg:flex-row min-h-screen"
+              >
+                <Sidebar />
+                <main className="flex-1 lg:ml-64 min-h-screen pb-24 lg:pb-12">
+                  <Header />
+                  <div className="mt-20 px-4 lg:px-10 py-6 lg:py-10">
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/clients" element={<Clients />} />
+                      <Route path="/agenda" element={<Agenda />} />
+                    </Routes>
+                  </div>
+                </main>
+                <BottomNav />
+                <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </HashRouter>
     </AppContext.Provider>
