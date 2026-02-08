@@ -2,7 +2,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Search, Plus, X, Camera, Calendar as CalendarIcon, 
-  FileText, ImageIcon, Clock, ChevronLeft, Upload, Trash2, Users
+  FileText, ImageIcon, Clock, ChevronLeft, Upload, Trash2, Users,
+  Instagram, Facebook, Mail, Phone, Tag, Gift, Info
 } from 'lucide-react';
 import { useApp } from '../App';
 import { Client, Appointment } from '../types';
@@ -29,7 +30,6 @@ const compressImage = (file: File): Promise<string> => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Qualidade 0.5 para garantir que múltiplas fotos caibam no limite de 1MB do doc
         resolve(canvas.toDataURL('image/jpeg', 0.5)); 
       };
     };
@@ -100,7 +100,6 @@ const DossieModal = ({ isOpen, onClose, client }: { isOpen: boolean; onClose: ()
         </div>
         
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
-          {/* Timeline de Sessões */}
           <div className={`w-full sm:w-80 border-r bg-gray-50/50 overflow-y-auto ${selectedApp ? 'hidden sm:block' : 'block'}`}>
             <div className="p-4 border-b bg-white/50">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Histórico de Sessões</p>
@@ -130,7 +129,6 @@ const DossieModal = ({ isOpen, onClose, client }: { isOpen: boolean; onClose: ()
             )}
           </div>
 
-          {/* Editor de Registro */}
           <div className={`flex-1 flex flex-col bg-white overflow-hidden ${!selectedApp ? 'hidden sm:flex' : 'flex'}`}>
             {selectedApp ? (
               <div className="flex-1 flex flex-col overflow-hidden">
@@ -148,14 +146,14 @@ const DossieModal = ({ isOpen, onClose, client }: { isOpen: boolean; onClose: ()
                       value={notes} 
                       onChange={e => setNotes(e.target.value)} 
                       className="w-full p-6 bg-gray-50 rounded-[24px] border border-gray-100 text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all resize-none shadow-inner" 
-                      placeholder="Descreva detalhes do procedimento, alergias, intercorrências ou preferências técnicas..." 
+                      placeholder="Descreva detalhes do procedimento..." 
                       rows={6} 
                     />
                   </div>
 
                   <div className="space-y-4">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                      <Camera size={12} className="text-[#C5A059]" /> Registro Visual (Antes/Depois)
+                      <Camera size={12} className="text-[#C5A059]" /> Registro Visual
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                       {photos.map((p, i) => (
@@ -203,7 +201,6 @@ const DossieModal = ({ isOpen, onClose, client }: { isOpen: boolean; onClose: ()
                   <FileText size={32} className="text-gray-100" />
                 </div>
                 <h4 className="text-sm font-playfair font-black text-gray-400 uppercase tracking-[0.4em]">Selecione uma sessão</h4>
-                <p className="text-[10px] text-gray-300 uppercase tracking-widest mt-2">Para ver ou editar os registros premium</p>
               </div>
             )}
           </div>
@@ -225,7 +222,14 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
         id: Date.now().toString(), 
         name: '', 
         whatsapp: '', 
+        phone: '',
+        email: '',
         instagram: '',
+        facebook: '',
+        birthday: '',
+        notes: '',
+        status: 'active',
+        createdAt: new Date().toISOString(),
         photoUrl: 'https://picsum.photos/200/200?random=' + Math.floor(Math.random()*100) 
       });
     }
@@ -263,13 +267,13 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm">
-      <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden flex flex-col shadow-2xl h-full sm:h-auto">
+      <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden flex flex-col shadow-2xl h-full sm:h-auto max-h-[95vh]">
         <div className="black-piano p-8 text-white relative flex-shrink-0">
-          <h2 className="text-xl font-playfair font-bold text-[#C5A059] uppercase tracking-widest">{initialData ? 'Editar Perfil' : 'Novo Cadastro Premium'}</h2>
+          <h2 className="text-xl font-playfair font-bold text-[#C5A059] uppercase tracking-widest">{initialData ? 'Editar Perfil Premium' : 'Novo Cadastro Premium'}</h2>
           <button onClick={onClose} className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"><X size={24}/></button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-8 sm:p-10 space-y-10">
+        <div className="flex-1 overflow-y-auto p-8 sm:p-10 space-y-10 bg-white">
           <div className="flex flex-col items-center">
             <label className="cursor-pointer group relative">
               <div className="w-32 h-32 rounded-full bg-gray-50 border-2 border-dashed border-[#C5A059]/30 overflow-hidden flex items-center justify-center p-1 group-hover:border-[#C5A059]/60 transition-all">
@@ -282,31 +286,82 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={onFile} />
             </label>
-            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Foto de Identificação</p>
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Foto de Perfil</p>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Nome Completo</label>
-              <input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Nome da cliente" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">WhatsApp</label>
-                <input value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="(00) 00000-0000" />
+          <div className="space-y-8">
+            {/* Seção Identidade */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
+                <Info size={14} className="text-[#C5A059]" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Informações de Base</h3>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Instagram</label>
-                <input value={formData.instagram || ''} onChange={e => setFormData({...formData, instagram: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="@usuario" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Users size={10} /> Nome Completo</label>
+                  <input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Ex: Maria Oliveira" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Gift size={10} /> Data de Nascimento</label>
+                  <input type="date" value={formData.birthday || ''} onChange={e => setFormData({...formData, birthday: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" />
+                </div>
+              </div>
+            </div>
+
+            {/* Seção Contato e Redes */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
+                <Phone size={14} className="text-[#C5A059]" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Contato & Digital</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Phone size={10} /> WhatsApp/Celular</label>
+                  <input value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value, phone: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="(00) 00000-0000" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Mail size={10} /> E-mail</label>
+                  <input type="email" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="exemplo@gmail.com" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Instagram size={10} /> Instagram</label>
+                  <input value={formData.instagram || ''} onChange={e => setFormData({...formData, instagram: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="@usuario" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Facebook size={10} /> Facebook</label>
+                  <input value={formData.facebook || ''} onChange={e => setFormData({...formData, facebook: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Nome no Facebook" />
+                </div>
+              </div>
+            </div>
+
+            {/* Seção Observações e Status */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
+                <Tag size={14} className="text-[#C5A059]" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Perfil & Notas</h3>
+              </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Tag size={10} /> Categoria da Cliente</label>
+                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none appearance-none cursor-pointer">
+                    <option value="active">Cliente Ativa</option>
+                    <option value="vip">Cliente VIP ✨</option>
+                    <option value="inactive">Inativa / Retenção</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><FileText size={10} /> Observações Importantes</label>
+                  <textarea value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all resize-none shadow-inner" placeholder="Alergias, preferências, indicações..." rows={3} />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-8 border-t bg-gray-50/50 flex gap-4">
+        <div className="p-8 border-t bg-gray-50/50 flex gap-4 flex-shrink-0">
           <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cancelar</button>
           <button onClick={save} disabled={loading || imgLoading} className="flex-[2] py-4 black-piano text-[#C5A059] rounded-2xl font-black uppercase tracking-widest shadow-xl btn-3d border border-[#C5A059]/20">
-            {loading ? 'Processando...' : 'Efetivar Cadastro'}
+            {loading ? 'Salvando...' : (initialData ? 'Atualizar Perfil' : 'Finalizar Cadastro')}
           </button>
         </div>
       </motion.div>
@@ -334,7 +389,7 @@ const Clients = () => {
             value={search} 
             onChange={e => setSearch(e.target.value)} 
             className="w-full pl-14 pr-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm outline-none focus:bg-white focus:border-[#C5A059]/40 transition-all" 
-            placeholder="Pesquisar por nome ou whatsapp..." 
+            placeholder="Pesquisar por nome ou contato..." 
           />
         </div>
         <button onClick={() => { setSelected(null); setIsFormOpen(true); }} className="px-10 py-4 black-piano text-[#C5A059] rounded-2xl font-black text-xs uppercase tracking-widest btn-3d shadow-xl border border-[#C5A059]/20 flex items-center justify-center gap-2">
@@ -348,16 +403,24 @@ const Clients = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             key={c.id} 
-            className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 text-center group hover:shadow-xl transition-all duration-500 hover:scale-[1.02]"
+            className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 text-center group hover:shadow-xl transition-all duration-500 hover:scale-[1.02] relative"
           >
+            {c.status === 'vip' && (
+              <div className="absolute top-6 right-6 text-[#C5A059]">
+                <Gift size={18} className="animate-pulse" />
+              </div>
+            )}
             <div className="relative mb-6">
               <img src={c.photoUrl || 'https://via.placeholder.com/150'} className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-[#F5F5F7] shadow-xl group-hover:border-[#C5A059]/20 transition-all" alt={c.name} />
-              <div className="absolute bottom-0 right-1/2 translate-x-12 w-8 h-8 gold-gradient rounded-full border-4 border-white flex items-center justify-center">
+              <div className="absolute bottom-0 right-1/2 translate-x-12 w-8 h-8 gold-gradient rounded-full border-4 border-white flex items-center justify-center shadow-md">
                  <div className="w-1.5 h-1.5 bg-[#0A0A0B] rounded-full"></div>
               </div>
             </div>
             <h3 className="font-playfair font-bold text-lg text-[#0A0A0B] mb-1 truncate px-2">{c.name}</h3>
-            <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest mb-8">{c.whatsapp || 'Sem contato'}</p>
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest">{c.whatsapp || 'Sem WhatsApp'}</p>
+              {c.instagram && <Instagram size={10} className="text-gray-300" />}
+            </div>
             
             <div className="grid grid-cols-2 gap-3">
               <button 
@@ -376,7 +439,6 @@ const Clients = () => {
           </motion.div>
         )) : (
           <div className="col-span-full py-20 text-center opacity-30">
-            {/* Added missing 'Users' import from 'lucide-react' to fix the reference error on line 379 */}
             <Users size={48} className="mx-auto mb-4 text-gray-300" />
             <p className="text-sm font-black uppercase tracking-[0.4em]">Nenhuma cliente vinculada</p>
           </div>
