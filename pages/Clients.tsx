@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Search, Plus, X, Camera, Calendar as CalendarIcon, 
   FileText, ImageIcon, Clock, ChevronLeft, Upload, Trash2, Users,
-  Instagram, Facebook, Mail, Phone, Tag, Gift, Info
+  Instagram, Facebook, Mail, Phone, Tag, Gift, Info, Briefcase, MapPin, Sparkle, Check
 } from 'lucide-react';
 import { useApp } from '../App';
 import { Client, Appointment } from '../types';
@@ -37,6 +37,20 @@ const compressImage = (file: File): Promise<string> => {
   });
 };
 
+const SuccessToast = ({ message }: { message: string }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 50 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 50 }}
+    className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] black-piano text-[#C5A059] px-8 py-4 rounded-2xl shadow-2xl border border-[#C5A059]/30 flex items-center gap-4"
+  >
+    <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-[#0A0A0B]">
+      <Check size={18} strokeWidth={3} />
+    </div>
+    <span className="font-bold text-xs uppercase tracking-widest">{message}</span>
+  </motion.div>
+);
+
 const DossieModal = ({ isOpen, onClose, client }: { isOpen: boolean; onClose: () => void; client: Client | null }) => {
   const { appointments, updateAppointment } = useApp();
   const [selectedApp, setSelectedApp] = useState<Appointment | null>(null);
@@ -60,9 +74,14 @@ const DossieModal = ({ isOpen, onClose, client }: { isOpen: boolean; onClose: ()
   const save = async () => {
     if (!selectedApp) return;
     setSaving(true);
-    await updateAppointment({ ...selectedApp, serviceNotes: notes, servicePhotos: photos });
-    setSaving(false);
-    setSelectedApp(null);
+    try {
+      await updateAppointment({ ...selectedApp, serviceNotes: notes, servicePhotos: photos });
+      setSelectedApp(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,6 +234,7 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
   const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -227,6 +247,9 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
         instagram: '',
         facebook: '',
         birthday: '',
+        occupation: '',
+        indication: '',
+        address: '',
         notes: '',
         status: 'active',
         createdAt: new Date().toISOString(),
@@ -241,9 +264,15 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
     try {
       if (initialData) await updateClient(formData);
       else await addClient(formData);
-      onClose();
+      
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        onClose(); // FECHA A MODAL APÓS SALVAMENTO
+      }, 1500);
     } catch (e) {
       console.error(e);
+      alert("Houve um problema ao salvar. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -266,92 +295,124 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm">
-      <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden flex flex-col shadow-2xl h-full sm:h-auto max-h-[95vh]">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-3xl rounded-[32px] overflow-hidden flex flex-col shadow-2xl h-full sm:h-auto max-h-[95vh]">
         <div className="black-piano p-8 text-white relative flex-shrink-0">
-          <h2 className="text-xl font-playfair font-bold text-[#C5A059] uppercase tracking-widest">{initialData ? 'Editar Perfil Premium' : 'Novo Cadastro Premium'}</h2>
-          <button onClick={onClose} className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"><X size={24}/></button>
+          <div className="flex items-center gap-3">
+            <Sparkle className="text-[#C5A059]" size={20} />
+            <h2 className="text-xl font-playfair font-bold text-[#C5A059] uppercase tracking-widest">
+              {initialData ? 'Ajuste de Perfil' : 'Admissão Premium'}
+            </h2>
+          </div>
+          <button onClick={onClose} className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors">
+            <X size={24}/>
+          </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-8 sm:p-10 space-y-10 bg-white">
+        <div className="flex-1 overflow-y-auto p-8 sm:p-10 space-y-12 bg-white">
+          {/* Header de Imagem */}
           <div className="flex flex-col items-center">
             <label className="cursor-pointer group relative">
               <div className="w-32 h-32 rounded-full bg-gray-50 border-2 border-dashed border-[#C5A059]/30 overflow-hidden flex items-center justify-center p-1 group-hover:border-[#C5A059]/60 transition-all">
                 {imgLoading ? <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#C5A059] border-t-transparent" /> : (
-                  <img src={formData.photoUrl} className="w-full h-full object-cover rounded-full" alt="Preview" />
+                  <img src={formData.photoUrl} className="w-full h-full object-cover rounded-full shadow-lg" alt="Preview" />
                 )}
               </div>
-              <div className="absolute bottom-0 right-0 w-10 h-10 gold-gradient rounded-full flex items-center justify-center text-[#0A0A0B] shadow-lg border-2 border-white">
+              <div className="absolute bottom-1 right-1 w-9 h-9 gold-gradient rounded-full flex items-center justify-center text-[#0A0A0B] shadow-lg border-2 border-white">
                 <Camera size={16} />
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={onFile} />
             </label>
-            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Foto de Perfil</p>
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4 italic">Identidade Visual da Cliente</p>
           </div>
 
-          <div className="space-y-8">
-            {/* Seção Identidade */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
-                <Info size={14} className="text-[#C5A059]" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Informações de Base</h3>
+          <div className="space-y-10">
+            {/* Seção 1: Identidade */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                <Users size={14} className="text-[#C5A059]" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Dados Principais</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Users size={10} /> Nome Completo</label>
-                  <input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Ex: Maria Oliveira" />
+                <div className="sm:col-span-2 space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Nome Completo</label>
+                  <input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Ex: Isabella de Lumière" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Gift size={10} /> Data de Nascimento</label>
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Nascimento</label>
                   <input type="date" value={formData.birthday || ''} onChange={e => setFormData({...formData, birthday: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Profissão</label>
+                  <div className="relative">
+                    <Briefcase size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                    <input value={formData.occupation || ''} onChange={e => setFormData({...formData, occupation: e.target.value})} className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Ocupação atual" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Seção Contato e Redes */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
-                <Phone size={14} className="text-[#C5A059]" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Contato & Digital</h3>
+            {/* Seção 2: Conexões e Redes */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                <Sparkle size={14} className="text-[#C5A059]" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Digital & Social</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Phone size={10} /> WhatsApp/Celular</label>
-                  <input value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value, phone: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="(00) 00000-0000" />
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">WhatsApp</label>
+                  <div className="relative">
+                    <Phone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                    <input value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value, phone: e.target.value})} className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="(00) 00000-0000" />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Mail size={10} /> E-mail</label>
-                  <input type="email" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="exemplo@gmail.com" />
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Instagram</label>
+                  <div className="relative">
+                    <Instagram size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                    <input value={formData.instagram || ''} onChange={e => setFormData({...formData, instagram: e.target.value})} className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="@perfil" />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Instagram size={10} /> Instagram</label>
-                  <input value={formData.instagram || ''} onChange={e => setFormData({...formData, instagram: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="@usuario" />
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Facebook</label>
+                  <div className="relative">
+                    <Facebook size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                    <input value={formData.facebook || ''} onChange={e => setFormData({...formData, facebook: e.target.value})} className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Nome no Facebook" />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Facebook size={10} /> Facebook</label>
-                  <input value={formData.facebook || ''} onChange={e => setFormData({...formData, facebook: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Nome no Facebook" />
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">E-mail</label>
+                  <div className="relative">
+                    <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                    <input type="email" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="cliente@lumiere.com" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Seção Observações e Status */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
-                <Tag size={14} className="text-[#C5A059]" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Perfil & Notas</h3>
+            {/* Seção 3: Notas e Observações */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                <FileText size={14} className="text-[#C5A059]" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A0A0B]">Perfil de Atendimento</h3>
               </div>
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Tag size={10} /> Categoria da Cliente</label>
-                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none appearance-none cursor-pointer">
-                    <option value="active">Cliente Ativa</option>
-                    <option value="vip">Cliente VIP ✨</option>
-                    <option value="inactive">Inativa / Retenção</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Indicação</label>
+                    <input value={formData.indication || ''} onChange={e => setFormData({...formData, indication: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Quem indicou?" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Endereço</label>
+                    <div className="relative">
+                      <MapPin size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                      <input value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all" placeholder="Rua, Número, Bairro" />
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><FileText size={10} /> Observações Importantes</label>
-                  <textarea value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all resize-none shadow-inner" placeholder="Alergias, preferências, indicações..." rows={3} />
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Observações Profissionais</label>
+                  <textarea value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-[#C5A059]/40 outline-none transition-all resize-none shadow-inner" placeholder="Alergias, preferências, peculiaridades e informações essenciais para um atendimento impecável..." rows={4} />
                 </div>
               </div>
             </div>
@@ -359,12 +420,17 @@ const ClientFormModal = ({ isOpen, onClose, initialData }: any) => {
         </div>
 
         <div className="p-8 border-t bg-gray-50/50 flex gap-4 flex-shrink-0">
-          <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cancelar</button>
-          <button onClick={save} disabled={loading || imgLoading} className="flex-[2] py-4 black-piano text-[#C5A059] rounded-2xl font-black uppercase tracking-widest shadow-xl btn-3d border border-[#C5A059]/20">
-            {loading ? 'Salvando...' : (initialData ? 'Atualizar Perfil' : 'Finalizar Cadastro')}
+          <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-[#0A0A0B] transition-colors">Cancelar</button>
+          <button onClick={save} disabled={loading || imgLoading} className="flex-[2] py-4 black-piano text-[#C5A059] rounded-2xl font-black uppercase tracking-widest shadow-xl btn-3d border border-[#C5A059]/20 flex items-center justify-center gap-2">
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#C5A059] border-t-transparent" />
+            ) : (initialData ? 'Atualizar Perfil' : 'Consolidar Cadastro')}
           </button>
         </div>
       </motion.div>
+      <AnimatePresence>
+        {showSuccess && <SuccessToast message="Consolidado com Êxito ✨" />}
+      </AnimatePresence>
     </div>
   );
 };

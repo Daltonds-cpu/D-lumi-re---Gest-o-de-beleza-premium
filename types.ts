@@ -9,6 +9,9 @@ export interface Client {
   facebook?: string;
   whatsapp?: string;
   notes: string;
+  occupation?: string;
+  indication?: string;
+  address?: string;
   history: Appointment[];
   createdAt: string;
   status?: 'active' | 'vip' | 'inactive';
